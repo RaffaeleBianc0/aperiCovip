@@ -1,0 +1,1403 @@
+<!--
+                    _  ___         _
+ __ _ _ __  ___ _ _(_)/ __|_____ _(_)_ __
+/ _` | '_ \/ -_) '_| | (__/ _ \ V / | '_ \
+\__,_| .__/\___|_| |_|\___\___/\_/|_| .__/
+     |_|                            |_|
+
+Confronta i fondi pensione italiani usando dati ufficiali COVIP.
+
+Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
+
+TODO:
+- nel parsing dei rendimenti, usa numero_albo + comparto per creare ciascun oggetto (con fallback sul nome normalizzato). Ogni riga del file XLSX è un oggetto valido, invece attualmente viene letto un solo comparto per ciascun numero_albo (33 risultati invece di 150+).
+- se il numero di oggetti rilevati dal file ISC è diverso da quello rilevato dal file RENDIMENTI, stampa un piccolo warning nello stesso box.
+- nel calcolo di "Rend stima", considera i rendimenti ufficiali con peso decrescente all'aumentare degli anni, perché i rendimenti recenti sono quelli più probabili, esempio: 3a=40% 5a=30% 10a=20% 20a=10%
+- sposta il flag "solo comparti con entrambi i dati" e lo slider "peso ISC" entrambi nel box "esplora la classifica". Il box "Filtra e pondera" può essere a questo punto rimosso.
+- sposta il textbox con gli anni alla pensione nel box "esplora la classifica". Il box "Imposta i tuoi parametri" può essere a questo punto rimosso.
+- ri-etichetta correttamente i box residui dopo le rimozioni appena effettuate.
+- riporta tutte le colonne lette, ma rendi collassabili i gruppi "ISC ufficiali" e "Rend ufficiali" (e default=collapsed) così da semplificare la visualizzazione.
+- prima della colonna Fondo, riporta anche la colonna Società (valori letti dai file in input, dove lo stesso numero_albo corrisponde alla stessa Società).
+- nella colonna COMPARTO, non stampare i numeri tra parentesi letti dai file in input.
+- modifica il colore delle categorie così: AZN=rosso, OBB=blu, BIL=verde, GAR=marrone
+-->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aperiCovip</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .container { max-width: 100%; padding: 2rem 0; margin: 0; }
+        .inner { padding: 0 1rem; }
+
+        header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+
+        h1 { font-size: 1.8rem; color: var(--accent); margin-bottom: 0.5rem; }
+
+        p.description { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* ---- Step layout ---- */
+        .step-block {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-num {
+            flex: 0 0 auto;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--accent);
+            color: var(--bg-color);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .step-title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
+        .step-instructions { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+        .step-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
+
+        .row { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end; }
+
+        .field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 200px; }
+
+        .field h3 { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.03em; }
+
+        .field .sub-label { font-size: 0.7rem; color: var(--text-muted); font-style: italic; }
+
+        label { font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; }
+
+        select, input[type="text"], input[type="number"], input[type="file"] {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        input[type="text"], input[type="number"] { min-width: 140px; }
+        input[type="file"] { width: 100%; }
+
+        .btn {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.55rem 1.1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.85rem;
+        }
+        .btn:hover { background-color: var(--accent-hover); }
+
+        .btn-secondary { background-color: var(--border); color: var(--text-main); }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
+
+        .btn-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+        .radio-group { display: flex; gap: 1rem; align-items: center; }
+        .radio-group label { display: flex; align-items: center; gap: 0.35rem; color: var(--text-main); cursor: pointer; }
+
+        .file-status { font-size: 0.78rem; min-height: 1.1rem; }
+        .file-status.error { color: #f87171; }
+        .file-status.ok { color: var(--success); }
+
+        .banner {
+            font-size: 0.82rem;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .banner.info { background-color: rgba(56,189,248,0.08); color: var(--accent); border-color: rgba(56,189,248,0.3); }
+        .banner.warn { background-color: rgba(245,158,11,0.08); color: var(--warning); border-color: rgba(245,158,11,0.3); }
+        .banner.ok { background-color: rgba(34,197,94,0.08); color: var(--success); border-color: rgba(34,197,94,0.3); }
+
+        .manual-panel { display: none; flex-direction: column; gap: 1rem; border-top: 1px dashed var(--border); padding-top: 1rem; margin-top: 0.5rem; }
+        .manual-panel.visible { display: flex; }
+
+        .import-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .import-col { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.4rem; }
+
+        .view-pre {
+            display: none;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.8rem;
+            font-size: 0.72rem;
+            max-height: 320px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .view-pre.visible { display: block; }
+
+        .hidden-step { display: none; }
+        .collapsed-section { display: none; }
+        .collapsed-section.visible { display: block; }
+
+        .filter-group { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+        .slider-group { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+        .weight-label { font-size: 0.82rem; color: var(--text-main); white-space: nowrap; }
+
+        .export-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .table-scroll-progress {
+            height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+            margin: 0 0 0.5rem 0; position: sticky; top: 0; z-index: 10;
+        }
+        .table-scroll-progress .progress-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.1s ease; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th, td { padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 0.02em;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        th[data-col]:not([data-col="pos"]) { cursor: pointer; user-select: none; }
+        th[data-col]:not([data-col="pos"]):hover { color: var(--text-main); }
+
+        th.group-isc { color: #7dd3fc; }
+        th.group-rend { color: #86efac; }
+        th.group-stima { color: #fbbf24; }
+
+        .filter-row th { padding: 0.4rem 0.5rem; background-color: rgba(0, 0, 0, 0.3); position: sticky; top: 38px; z-index: 4; }
+        .filter-row input { width: 100%; min-width: 0; padding: 0.3rem 0.5rem; font-size: 0.78rem; }
+        .filter-row select { width: 100%; min-width: 0; padding: 0.3rem 0.5rem; font-size: 0.78rem; background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; }
+
+        tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+
+        td.fondo-cell { white-space: normal; min-width: 200px; }
+
+        td.metric-used { color: var(--accent); font-weight: 700; position: relative; }
+        td.metric-used::after { content: "●"; font-size: 0.55rem; vertical-align: super; margin-left: 3px; color: var(--accent); }
+
+        td.imputed-val { font-style: italic; opacity: 0.85; }
+        td.imputed-val::after { content: " (m)"; font-size: 0.65rem; color: var(--warning); }
+
+        td.stima-val { font-weight: 800; color: #fbbf24; font-size: 0.95rem; }
+        .score-badge { font-size: 0.95rem; }
+        td.pos-pill { text-align: center; }
+        td.pos-pill > span { display: inline-flex; min-width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: 999px; background: rgba(56,189,248,0.18); color: var(--accent); font-weight: 700; }
+
+        .score-badge {
+            display: inline-block; font-weight: bold; padding: 0.25rem 0.65rem; border-radius: 6px;
+            color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.2); cursor: help;
+        }
+
+        .type-tag { font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; }
+        .type-azn { background-color: #3b82f620; color: #60a5fa; }
+        .type-bil { background-color: #a855f720; color: #c084fc; }
+        .type-obb { background-color: #f59e0b20; color: #fbbf24; }
+        .type-gar { background-color: #22c55e20; color: #4ade80; }
+        .type-other { background-color: #64748b20; color: #94a3b8; }
+
+        .note-tag { font-size: 0.75rem; color: var(--text-muted); }
+
+        .legend { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .legend .dot { color: var(--accent); }
+        .legend .imp { color: var(--warning); }
+        .legend .stima { color: #fbbf24; font-weight: 800; }
+
+        .status-bar { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .status-bar strong { color: var(--accent); }
+
+        footer { margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+
+        .expandable-block { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; }
+        .expandable-block summary { padding: 0.8rem 1.2rem; cursor: pointer; font-weight: 600; color: var(--accent); user-select: none; display: flex; align-items: center; gap: 0.5rem; list-style: none; }
+        .expandable-block summary::-webkit-details-marker { display: none; }
+        .expandable-block summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.2s; display: inline-block; }
+        .expandable-block[open] summary::before { transform: rotate(90deg); }
+        .expandable-block summary:hover { background-color: rgba(255,255,255,0.03); }
+        .expandable-block .block-content { padding: 0.8rem 1.2rem 1.2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.9rem; }
+        .expandable-block .block-content code { background: rgba(0,0,0,0.3); padding: 0.1rem 0.35rem; border-radius: 4px; color: var(--text-main); }
+        .expandable-block .block-content .warning-text { color: var(--warning); }
+        .expandable-block .block-content ul, .expandable-block .block-content ol { padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.4rem; }
+
+        @media (max-width: 700px) {
+            .row { flex-direction: column; align-items: stretch; }
+            .field { min-width: unset; }
+            .import-row { flex-direction: column; }
+            .export-bar { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="inner">
+        <header>
+            <h1>🍸aperiCovip</h1>
+            <p class="description">
+                <strong>Comparatore fondi pensione basato su dati ufficiali COVIP.</strong><br />
+                Diventa il miglior conversatore sull'argomento più chiacchierato agli aperitivi: i fondi pensione.<br />
+                Il punteggio di ogni fondo è ottenuto shakerando gli ingredienti fondamentali per un buon cocktail da dopo-lavoro: i <strong id="weightLabel">costi</strong> (pesati di default al 75%) e i <strong id="weightLabelRend">rendimenti</strong> (pesati di default al 25%).<br />
+                I dati mancanti in input vengono stimati con la <strong>media della stessa categoria</strong> di fondi per lo stesso dato (AZN, BIL, OBB, GAR).
+                Per ogni fondo/comparto vengono calcolati l'ISC e il rendimento atteso per la durata in anni impostata dall'utente, per estrapolazione dai dati ufficiali.<br />
+            </p>
+        </header>
+
+        <!-- DISCLAIMER -->
+        <details class="expandable-block">
+            <summary>⚠️ Disclaimer</summary>
+            <div class="block-content">
+                <p class="warning-text" style="margin-bottom: 0.8rem;"><strong>Importante:</strong> Questo strumento è fornito a scopo puramente indicativo e informativo.</p>
+                <ul>
+                    <li>I dati visualizzati dipendono <strong>esclusivamente</strong> dai file scaricati o caricati. L'elaborazione potrebbe mostrare dati non corretti a seconda della struttura o del contenuto del file di input.</li>
+                    <li>Le imputazioni dei dati mancanti vengono effettuate utilizzando la <strong>media della categoria</strong> (AZN, BIL, OBB, GAR) e possono non rappresentare la realtà effettiva del singolo fondo.</li>
+                    <li>Le colonne "stima" sono ottenute per <strong>estrapolazione statistica</strong> dai valori ISC/Rendimento disponibili e sono puramente indicative.</li>
+                    <li>Il punteggio calcolato è basato su una <strong>metodologia proprietaria</strong> (peso ISC + Rendimento) e non rappresenta alcuna classificazione ufficiale COVIP.</li>
+                    <li>Si raccomanda di <strong>verificare sempre i dati ufficiali</strong> pubblicati da COVIP prima di prendere qualsiasi decisione.</li>
+                    <li>L'utilizzo di questo strumento è a <strong>esclusivo rischio dell'utente</strong>. Lo sviluppatore non si assume alcuna responsabilità per errori, omissioni o danni derivanti dall'uso dei dati qui presentati.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- STEP 1 -->
+        <div class="step-block">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div>
+                    <div class="step-title">Imposta i tuoi parametri</div>
+                    <div class="step-instructions">Indica quanti anni ti mancano alla pensione per stimare i valori futuri.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row">
+                    <div class="field">
+                        <h3>Anni alla pensione</h3>
+                        <input type="number" id="yearsToRetirement" min="1" max="60" value="19" oninput="onYearsChange()">
+                        <span class="sub-label">Usato per calcolare le colonne "stima" per estrapolazione.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-block">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div>
+                    <div class="step-title">Scarica i dati ufficiali COVIP</div>
+                    <div class="step-instructions">Apri le pagine del sito COVIP dove scaricare manualmente i file di ISC e Rendimenti.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row" style="align-items:center;">
+                    <a href="https://www.covip.it/isc_dinamico/" target="_blank"><button class="btn">🔗 Apri pagina ISC COVIP</button></a>
+                    <a href="https://www.covip.it/per-gli-operatori/fondi-pensione/costi-e-rendimenti-dei-fondi-pensione/elenco-dei-rendimenti" target="_blank"><button class="btn">🔗 Apri pagina Rendimenti COVIP</button></a>
+                </div>
+                <!-- <span class="sub-label">Scarica i due file dalla pagina COVIP e caricali al passaggio successivo.</span>  -->
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-block">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div>
+                    <div class="step-title">Carica i file</div>
+                    <div class="step-instructions">Carica qui i due file ISC e Rendimenti.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="import-row">
+                    <div class="import-col">
+                        <h3>Costi (ISC)</h3>
+                        <label for="iscInput">Carica file ISC (.xlsx):</label>
+                        <input type="file" id="iscInput" accept=".xlsx" onchange="handleIscUpload(event)">
+                        <div id="iscStatus" class="file-status"></div>
+                        <div class="file-status" id="lastIscPath" style="font-size:0.8rem; color:var(--text-muted);"></div>
+                    </div>
+                    <div class="import-col">
+                        <h3>Rendimenti</h3>
+                        <label for="rendInput">Carica file Rendimenti (.xlsx):</label>
+                        <input type="file" id="rendInput" accept=".xlsx" onchange="handleRendUpload(event)">
+                        <div id="rendStatus" class="file-status"></div>
+                        <div class="file-status" id="lastRendPath" style="font-size:0.8rem; color:var(--text-muted);"></div>
+                    </div>
+                </div>
+                <div class="banner info">
+                    Entrambi i file XLSX sono necessari. I dati vengono elaborati direttamente nel browser e non viene memorizzato il nome dei file.
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div id="stepRaw" class="step-block hidden-step">
+            <div class="step-header">
+                <div class="step-num">4</div>
+                <div>
+                    <div class="step-title">Visualizza i dati grezzi</div>
+                    <div class="step-instructions">I dati grezzi sono nascosti di default. Apri la tabella per verificare l’importazione.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row" style="align-items:center; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="toggleRawIscVisibility()" id="toggleRawIscButton">👁️ Mostra ISC grezzi</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleRawRendVisibility()" id="toggleRawRendButton">👁️ Mostra rendimenti grezzi</button>
+                </div>
+                <div id="rawRendSection" class="collapsed-section" style="margin-top:1rem;">
+                    <div class="table-container">
+                        <div class="status-bar" style="margin-bottom:0.5rem;"><strong>Rendimenti</strong></div>
+                        <table id="rawRendTable"><thead></thead><tbody></tbody></table>
+                    </div>
+                </div>
+                <div id="rawIscSection" class="collapsed-section" style="margin-top:1rem;">
+                    <div class="table-container">
+                        <div class="status-bar" style="margin-bottom:0.5rem;"><strong>ISC</strong></div>
+                        <table id="rawIscTable"><thead></thead><tbody></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div id="stepFilter" class="step-block hidden-step">
+            <div class="step-header">
+                <div class="step-num">5</div>
+                <div>
+                    <div class="step-title">Filtra e pondera</div>
+                    <div class="step-instructions">Filtra i fondi con le caselle sopra le colonne della tabella, poi regola il peso tra ISC e Rendimento nel punteggio.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row" style="align-items:center;">
+                    <div class="filter-group">
+                        <label for="onlyMatched" title="Filtra solo i comparti che contengono sia dati ISC sia dati Rendimenti originali, escludendo quelli con informazioni parziali.">
+                            <input type="checkbox" id="onlyMatched" onchange="processAndRender()" style="width:auto;" checked>
+                            Solo comparti con entrambi i dati (ISC e Rendimento)
+                        </label>
+                    </div>
+
+                    <div class="slider-group">
+                        <label style="white-space:nowrap;">Peso ISC:</label>
+                        <input type="range" id="weightSlider" min="0" max="100" value="75" oninput="updateWeight()">
+                        <span class="weight-label" id="weightDisplay">75% ISC / 25% Rend</span>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary btn-sm" onclick="setWeight(50)">50% ISC</button>
+                            <button class="btn btn-secondary btn-sm" onclick="setWeight(75)">75% ISC</button>
+                            <button class="btn btn-secondary btn-sm" onclick="setWeight(90)">90% ISC</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div id="stepExplore" class="step-block hidden-step">
+            <div class="step-header">
+                <div class="step-num">6</div>
+                <div>
+                    <div class="step-title">Esplora la classifica</div>
+                    <div class="step-instructions">Clicca sulle intestazioni delle colonne per ordinare (di nuovo per invertire). "(m)" indica un dato imputato con la media di categoria; i valori in grassetto sono le colonne stimate.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="legend">
+                    <div><span class="imp">(m)</span> = dato mancante, sostituito con la media della stessa categoria.</div>
+                    <div><span class="stima">grassetto</span> = colonna stimata per estrapolazione agli anni mancanti alla pensione, usata nel punteggio.</div>
+                </div>
+
+                <div class="status-bar">
+                    <span>Righe ISC caricate: <strong id="countIsc">0</strong> — Righe Rendimenti caricate: <strong id="countRend">0</strong> — Righe visualizzate: <strong id="countFiltered">0</strong></span>
+                </div>
+
+                <div class="table-container" id="tableContainer">
+                    <div class="table-scroll-progress" id="scrollProgress">
+                        <div class="progress-fill" id="scrollProgressFill"></div>
+                    </div>
+                    <table id="fundsDataTable" class="official-hidden">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">Pos.</th>
+                                <th rowspan="2">N. Albo</th>
+                                <th rowspan="2">Fondo</th>
+                                <th rowspan="2">Comparto</th>
+                                <th rowspan="2">Categoria</th>
+                                <th rowspan="2">Punteggio</th>
+                                <th class="group-isc" colspan="2">ISC ufficiali</th>
+                                <th id="thIscStima" data-col="iscStima" class="group-stima" rowspan="2">ISC stima 19a</th>
+                                <th class="group-rend" colspan="4">Rend ufficiali</th>
+                                <th id="thRendStima" data-col="rendStima" class="group-stima" rowspan="2">Rend stima 19a</th>
+                            </tr>
+                            <tr>
+                                <th data-col="isc10" class="group-isc official-col">ISC 10a</th>
+                                <th data-col="isc35" class="group-isc official-col">ISC 35a</th>
+                                <th data-col="r3" class="group-rend official-col">Rend 3a</th>
+                                <th data-col="r5" class="group-rend official-col">Rend 5a</th>
+                                <th data-col="r10" class="group-rend official-col">Rend 10a</th>
+                                <th data-col="r20" class="group-rend official-col">Rend 20a</th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th></th>
+                                <th><input type="text" id="filterAlbo" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                <th><input type="text" id="filterFondo" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                <th><input type="text" id="filterComparto" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                <th>
+                                    <select id="filterCategoriaCol" onchange="processAndRender()">
+                                        <option value="ALL">Tutte</option>
+                                        <option value="AZN">AZN</option>
+                                        <option value="BIL">BIL</option>
+                                        <option value="OBB">OBB</option>
+                                        <option value="GAR">GAR</option>
+                                    </select>
+                                </th>
+                                <th colspan="9"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="fundsTable">
+                            <!-- Popolato via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div id="stepExport" class="step-block hidden-step">
+            <div class="step-header">
+                <div class="step-num">7</div>
+                <div>
+                    <div class="step-title">Esporta i risultati</div>
+                    <div class="step-instructions">Scarica la tabella filtrata e ordinata così com'è, nel formato che preferisci.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="export-bar">
+                    <label>📥 Esporta:</label>
+                    <button class="btn btn-secondary btn-sm" onclick="exportData('xlsx')">XLSX</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportData('csv')">CSV</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportData('tsv')">TSV</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Dati elaborati sulla base degli Indicatori Sintetici di Costo (ISC) e dei Rendimenti medi annui pubblicati da COVIP.
+        </footer>
+    </div>
+</div>
+
+<script>
+    // ---------------- Stato globale ----------------
+    let sortColumn = 'score';
+    let sortDirection = 'desc';
+    let iscWeight = 75;
+    let yearsToRetirement = 19;
+
+    let mainIscData = [];
+    let mainRendData = [];
+    let rawIscData = [];
+    let rawRendData = [];
+
+    let cachedFilteredData = [];
+
+    // ---------------- Preferenze utente (localStorage) ----------------
+    const PREFS_KEY = 'apericovip_prefs_v1';
+
+    function savePrefs() {
+        try {
+            localStorage.setItem(PREFS_KEY, JSON.stringify({
+                yearsToRetirement,
+                iscWeight
+            }));
+        } catch (err) { /* localStorage non disponibile: ignora */ }
+    }
+
+    function loadPrefs() {
+        try {
+            const raw = localStorage.getItem(PREFS_KEY);
+            if (!raw) return;
+            const prefs = JSON.parse(raw);
+
+            if (prefs.yearsToRetirement && prefs.yearsToRetirement > 0) {
+                yearsToRetirement = prefs.yearsToRetirement;
+                document.getElementById('yearsToRetirement').value = yearsToRetirement;
+                document.getElementById('thIscStima').textContent = `ISC stima ${yearsToRetirement}a`;
+                document.getElementById('thRendStima').textContent = `Rend stima ${yearsToRetirement}a`;
+            }
+
+            if (prefs.iscWeight !== undefined && prefs.iscWeight !== null) {
+                iscWeight = prefs.iscWeight;
+                document.getElementById('weightSlider').value = iscWeight;
+                const rendWeight = 100 - iscWeight;
+                document.getElementById('weightDisplay').textContent = `${iscWeight}% ISC / ${rendWeight}% Rend`;
+                document.getElementById('weightLabel').textContent = `${iscWeight}% ISC`;
+                document.getElementById('weightLabelRend').textContent = `${rendWeight}% Rendimento`;
+            }
+        } catch (err) { /* localStorage non disponibile o dati corrotti: ignora */ }
+    }
+
+    // ---------------- Helper: split Emittente/Fondo ----------------
+    function splitEmittenteFondo(nomeCompleto) {
+        let name = String(nomeCompleto || '').trim();
+        let emittente = name;
+        const prefixes = [
+            /^FONDO PENSIONE COMPLEMENTARE\s+/i,
+            /^FONDO PENSIONE\s+/i,
+            /^FONDO\s+/i
+        ];
+        for (let p of prefixes) {
+            if (p.test(emittente)) { emittente = emittente.replace(p, ''); break; }
+        }
+        emittente = emittente.replace(/\s*-\s*FONDO PENSIONE$/i, '').trim();
+        return { emittente: emittente || name, fondo: name };
+    }
+
+    // ---------------- Header maps ----------------
+    const ISC_HEADER_MAP = {
+        'n. albo': 'albo', 'n albo': 'albo', 'albo': 'albo',
+        'fondo': 'fondo',
+        'comparto': 'comparto',
+        'note': 'note',
+        'categ. comparto': 'categoria', 'categ comparto': 'categoria',
+        'categoria comparto': 'categoria', 'categoria': 'categoria',
+        'isc a 10 anni': 'isc10', 'isc 10 anni': 'isc10', 'isc10': 'isc10', 'isc 10': 'isc10',
+        'isc a 35 anni': 'isc35', 'isc 35 anni': 'isc35', 'isc35': 'isc35', 'isc 35': 'isc35'
+    };
+
+    const REND_LABEL_MAP = {
+        'albo': ['n. albo', 'n albo', 'albo'],
+        'fondo': ['fondo'],
+        'comparto': ['comparto'],
+        'note': ['note'],
+        'categoria': ['categoria', 'categ. comparto', 'categ comparto'],
+        'r3': ['3 anni', 'ultimi 3 anni'],
+        'r5': ['5 anni', 'ultimi 5 anni'],
+        'r10': ['10 anni', 'ultimi 10 anni'],
+        'r20': ['20 anni', 'ultimi 20 anni']
+    };
+
+    function normalizeHeader(h) {
+        return String(h == null ? '' : h).trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function parseNumValue(v) {
+        if (v === null || v === undefined || v === '') return null;
+        if (typeof v === 'number') return v;
+        const cleaned = String(v).trim().replace(',', '.').replace('%', '');
+        if (cleaned === '' || cleaned === '-' || /^n\.?d\.?$/i.test(cleaned)) return null;
+        const n = parseFloat(cleaned);
+        return isNaN(n) ? null : n;
+    }
+
+    function normalizeCategoria(cat) {
+        const c = String(cat || '').trim().toUpperCase();
+        if (!c) return '';
+        if (c.startsWith('AZN') || c.includes('AZIONAR')) return 'AZN';
+        if (c.startsWith('BIL') || c.includes('BILANC')) return 'BIL';
+        if (c.includes('GAR')) return 'GAR';
+        if (c.startsWith('OBB') || c.includes('OBBLIGAZ')) return 'OBB';
+        return c;
+    }
+
+    function findHeaderRow(aoa, headerMap, maxRows = 30) {
+        if (!aoa || !aoa.length) return -1;
+        let bestRow = -1;
+        let bestScore = -1;
+
+        for (let r = 0; r < Math.min(aoa.length, maxRows); r++) {
+            const row = aoa[r] || [];
+            let score = 0;
+            row.forEach(cell => {
+                if (headerMap[normalizeHeader(cell)]) score++;
+            });
+            if (score > bestScore) {
+                bestScore = score;
+                bestRow = r;
+            }
+        }
+        return bestScore > 0 ? bestRow : -1;
+    }
+
+    function findColumnIndexes(aoa, headerRow, headerMap) {
+        const colIndex = {};
+        if (headerRow < 0 || !aoa[headerRow]) return colIndex;
+        aoa[headerRow].forEach((cell, i) => {
+            const h = normalizeHeader(cell);
+            if (headerMap[h]) colIndex[headerMap[h]] = i;
+        });
+        return colIndex;
+    }
+
+    // ---------------- ISC parsing ----------------
+    function iscRowsFromAOA(aoa) {
+        if (!aoa || aoa.length < 2) return [];
+
+        const headerRow = findHeaderRow(aoa, ISC_HEADER_MAP, 30);
+        if (headerRow < 0) return [];
+
+        const colIndex = findColumnIndexes(aoa, headerRow, ISC_HEADER_MAP);
+        if (colIndex.fondo === undefined || colIndex.comparto === undefined) return [];
+
+        const out = [];
+        for (let r = headerRow + 1; r < aoa.length; r++) {
+            const row = aoa[r];
+            if (!row || row.every(c => c === '' || c === undefined || c === null)) continue;
+
+            const get = key => colIndex[key] !== undefined ? row[colIndex[key]] : '';
+            const fondo = String(get('fondo') || '').trim();
+            const comparto = String(get('comparto') || '').trim();
+            if (!fondo || !comparto) continue;
+
+            out.push({
+                albo: normalizeMissingValue(get('albo')),
+                fondo,
+                comparto,
+                note: String(get('note') || '').trim(),
+                categoria: normalizeCategoria(get('categoria')),
+                isc10: parseNumValue(get('isc10')),
+                isc35: parseNumValue(get('isc35'))
+            });
+        }
+        return out;
+    }
+
+    // ---------------- Rendimenti parsing ----------------
+    function rendRowsFromAOA(aoa) {
+        if (!aoa || aoa.length < 2) return [];
+        const scanRows = Math.min(aoa.length, 15);
+        const colFor = {}; const rowFor = {};
+
+        for (let r = 0; r < scanRows; r++) {
+            const row = aoa[r] || [];
+            for (let c = 0; c < row.length; c++) {
+                const cellText = normalizeHeader(row[c]);
+                if (!cellText) continue;
+                Object.keys(REND_LABEL_MAP).forEach(field => {
+                    const labels = REND_LABEL_MAP[field];
+                    for (const lab of labels) {
+                        if (cellText === lab || cellText.includes(lab)) { colFor[field] = c; rowFor[field] = r; break; }
+                    }
+                });
+            }
+        }
+
+        if (colFor.comparto === undefined) return [];
+
+        const headerRows = Object.values(rowFor);
+        const dataStart = (headerRows.length ? Math.max(...headerRows) : 0) + 1;
+
+        const out = [];
+
+        for (let r = dataStart; r < aoa.length; r++) {
+            const row = aoa[r];
+            if (!row || row.every(c => c === '' || c === undefined || c === null)) continue;
+            const get = (field) => (colFor[field] !== undefined ? row[colFor[field]] : '');
+
+            const alboVal = normalizeMissingValue(get('albo'));
+            const fondoVal = normalizeMissingValue(get('fondo'));
+
+            const comparto = String(get('comparto') || '').trim();
+            if (!comparto) continue;
+
+            out.push({
+                albo: alboVal,
+                fondo: fondoVal,
+                comparto: comparto,
+                note: String(get('note') || '').trim(),
+                categoria: normalizeCategoria(get('categoria')),
+                r3: parseNumValue(get('r3')),
+                r5: parseNumValue(get('r5')),
+                r10: parseNumValue(get('r10')),
+                r20: parseNumValue(get('r20'))
+            });
+        }
+        return out.filter(r => r.fondo && r.comparto);
+    }
+
+    function normalizeMissingValue(value) {
+        const str = String(value || '').trim();
+        if (!str || str === '-' || str.toLowerCase() === 'n.d.' || str.toLowerCase() === 'nd') return '';
+        return str;
+    }
+
+    // ---------------- Merge ISC + Rendimenti ----------------
+    function normalizeMatchText(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]+/g, ' ')
+            .trim()
+            .replace(/\s+/g, ' ');
+    }
+
+    function keyOf(fondo, comparto, albo) {
+        const alboKey = normalizeMatchText(albo);
+        const compartoKey = normalizeMatchText(comparto);
+        const fondoKey = normalizeMatchText(fondo);
+
+        if (alboKey && compartoKey) return `ALBO:${alboKey}|||COMP:${compartoKey}`;
+        return `FONDO:${fondoKey}|||COMP:${compartoKey}`;
+    }
+
+    function mergeDatasets(iscArr, rendArr) {
+        const map = new Map();
+        const fallback = new Map();
+
+        iscArr.forEach(d => {
+            const ef = splitEmittenteFondo(d.fondo);
+            const item = {
+                albo: d.albo,
+                emittente: ef.emittente,
+                fondo: ef.fondo,
+                comparto: d.comparto,
+                note: d.note,
+                categoria: d.categoria,
+                isc10: d.isc10,
+                isc35: d.isc35,
+                r3: null, r5: null, r10: null, r20: null,
+                _hasIsc: true,
+                _hasRend: false
+            };
+            const primaryKey = keyOf(d.fondo, d.comparto, d.albo);
+            map.set(primaryKey, item);
+            fallback.set(keyOf(d.fondo, d.comparto, ''), primaryKey);
+        });
+
+        rendArr.forEach(d => {
+            const primaryKey = keyOf(d.fondo, d.comparto, d.albo);
+            let matchedKey = map.has(primaryKey) ? primaryKey : null;
+
+            if (!matchedKey) {
+                matchedKey = fallback.get(keyOf(d.fondo, d.comparto, '')) || null;
+            }
+
+            if (matchedKey && map.has(matchedKey)) {
+                const row = map.get(matchedKey);
+                row.r3 = d.r3; row.r5 = d.r5; row.r10 = d.r10; row.r20 = d.r20;
+                if (!row.categoria) row.categoria = d.categoria;
+                if (!row.note) row.note = d.note;
+                if (!row.albo) row.albo = d.albo;
+                row._hasRend = true;
+            } else {
+                const ef = splitEmittenteFondo(d.fondo);
+                const item = {
+                    albo: d.albo,
+                    emittente: ef.emittente,
+                    fondo: ef.fondo,
+                    comparto: d.comparto,
+                    note: d.note,
+                    categoria: d.categoria,
+                    isc10: null, isc35: null,
+                    r3: d.r3, r5: d.r5, r10: d.r10, r20: d.r20,
+                    _hasIsc: false,
+                    _hasRend: true
+                };
+                map.set(primaryKey, item);
+            }
+        });
+
+        return Array.from(map.values());
+    }
+
+    // ---------------- Imputazione medie per categoria ----------------
+    function computeAveragesAndImpute(data) {
+        const numericCols = ['isc10', 'isc35', 'r3', 'r5', 'r10', 'r20'];
+        const categories = ['AZN', 'BIL', 'OBB', 'GAR'];
+        const averages = {};
+
+        categories.forEach(cat => {
+            averages[cat] = {};
+            const catData = data.filter(d => d.categoria === cat);
+            numericCols.forEach(col => {
+                const validVals = catData.map(d => d[col]).filter(v => v !== null && !isNaN(v));
+                averages[cat][col] = validVals.length > 0 ? validVals.reduce((a, b) => a + b, 0) / validVals.length : 0;
+            });
+        });
+
+        return data.map(item => {
+            const newItem = Object.assign({}, item);
+            newItem._imputed = {};
+            const cat = item.categoria || 'AZN';
+
+            numericCols.forEach(col => {
+                if (newItem[col] === null || newItem[col] === undefined || isNaN(newItem[col])) {
+                    newItem[col] = averages[cat] && averages[cat][col] !== undefined ? averages[cat][col] : 0;
+                    newItem._imputed[col] = true;
+                } else {
+                    newItem._imputed[col] = false;
+                }
+            });
+
+            return newItem;
+        });
+    }
+
+    function bestIsc(item) {
+        const order = [['isc35', '35a'], ['isc10', '10a']];
+        for (const [k, label] of order) {
+            if (item[k] !== null && item[k] !== undefined && !isNaN(item[k])) {
+                return { key: k, value: item[k], label, isImputed: !!item._imputed[k] };
+            }
+        }
+        return { key: null, value: null, label: null, isImputed: false };
+    }
+
+    function bestRend(item) {
+        const order = [['r20', '20a'], ['r10', '10a'], ['r5', '5a'], ['r3', '3a']];
+        for (const [k, label] of order) {
+            if (item[k] !== null && item[k] !== undefined && !isNaN(item[k])) {
+                return { key: k, value: item[k], label, isImputed: !!item._imputed[k] };
+            }
+        }
+        return { key: null, value: null, label: null, isImputed: false };
+    }
+
+    // ---------------- Estrapolazione lineare (colonne "stima") ----------------
+    function interpolateOrExtrapolate(points, x) {
+        const pts = points
+            .filter(p => p[1] !== null && p[1] !== undefined && !isNaN(p[1]))
+            .sort((a, b) => a[0] - b[0]);
+        if (pts.length === 0) return null;
+        if (pts.length === 1) return pts[0][1];
+
+        if (x <= pts[0][0]) return pts[0][1];
+        if (x >= pts[pts.length - 1][0]) {
+            const [x1, y1] = pts[pts.length - 2];
+            const [x2, y2] = pts[pts.length - 1];
+            return y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
+        }
+
+        for (let i = 0; i < pts.length - 1; i++) {
+            const [x1, y1] = pts[i];
+            const [x2, y2] = pts[i + 1];
+            if (x >= x1 && x <= x2) {
+                return y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
+            }
+        }
+
+        return pts[pts.length - 1][1];
+    }
+
+    function computeStimaColumns(item, years) {
+        const iscPoints = [[10, item.isc10], [35, item.isc35]];
+        let iscStima = interpolateOrExtrapolate(iscPoints, years);
+        if (iscStima !== null) iscStima = Math.max(0, iscStima);
+
+        const rendPoints = [[3, item.r3], [5, item.r5], [10, item.r10], [20, item.r20]];
+        let rendStima = interpolateOrExtrapolate(rendPoints, years);
+        if (rendStima !== null) rendStima = Math.max(0, rendStima);
+
+        item.iscStima = iscStima;
+        item.rendStima = rendStima;
+    }
+
+    // ---------------- Scoring con peso dinamico ----------------
+    function calculateScores(data) {
+        const imputedData = computeAveragesAndImpute(data);
+
+        const enriched = imputedData.map(item => {
+            const bi = bestIsc(item);
+            const br = bestRend(item);
+            computeStimaColumns(item, yearsToRetirement);
+            return Object.assign({}, item, { _bi: bi, _br: br });
+        });
+
+        const iscVals = enriched.map(i => i.iscStima).filter(v => v !== null && !isNaN(v));
+        const rendVals = enriched.map(i => i.rendStima).filter(v => v !== null && !isNaN(v));
+
+        const minIsc = iscVals.length ? Math.min(...iscVals) : 0;
+        const maxIsc = iscVals.length ? Math.max(...iscVals) : 1;
+        const minRend = rendVals.length ? Math.min(...rendVals) : 0;
+        const maxRend = rendVals.length ? Math.max(...rendVals) : 1;
+
+        const weightIsc = iscWeight / 100;
+        const weightRend = 1 - weightIsc;
+
+        return enriched.map(item => {
+            let scoreIsc = null; let scoreRend = null;
+            const iscValue = item.iscStima;
+            const rendValue = item.rendStima;
+
+            if (iscValue !== null && !isNaN(iscValue)) {
+                scoreIsc = maxIsc === minIsc ? 100 : ((maxIsc - iscValue) / (maxIsc - minIsc)) * 100;
+            }
+            if (rendValue !== null && !isNaN(rendValue)) {
+                scoreRend = maxRend === minRend ? 100 : ((rendValue - minRend) / (maxRend - minRend)) * 100;
+            }
+
+            let finalScore = null;
+            if (scoreIsc !== null && scoreRend !== null) finalScore = (scoreIsc * weightIsc) + (scoreRend * weightRend);
+            else if (scoreIsc !== null) finalScore = scoreIsc;
+            else if (scoreRend !== null) finalScore = scoreRend;
+
+            item.score = finalScore !== null ? Math.round(finalScore * 10) / 10 : null;
+            return item;
+        });
+    }
+
+    function getScoreColorStyle(score) {
+        if (score === null || score === undefined || isNaN(score)) return 'background-color: #334155; color: #94a3b8;';
+        const pct = Math.max(0, Math.min(100, score)) / 100;
+        const hue = Math.round(pct * 120);
+        return `background-color: hsl(${hue}, 75%, 35%); border: 1px solid hsl(${hue}, 80%, 45%);`;
+    }
+
+    // ---------------- Render tabella ----------------
+    function renderTable(data) {
+        const tbody = document.getElementById('fundsTable');
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center; padding:2rem; color:var(--text-muted);">Nessun dato disponibile. Scarica o carica i file ISC e Rendimenti per iniziare.</td></tr>';
+            cachedFilteredData = [];
+            updateScrollProgress();
+            return;
+        }
+
+        const sorted = [...data];
+        if (sortColumn !== 'pos') {
+            if (sortColumn === 'score') {
+                sorted.sort((a, b) => { const valA = a.score ?? -999; const valB = b.score ?? -999; return sortDirection === 'asc' ? valA - valB : valB - valA; });
+            } else if (sortColumn === 'albo') {
+                sorted.sort((a, b) => { const valA = String(a.albo || ''); const valB = String(b.albo || ''); return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA); });
+            } else {
+                sorted.sort((a, b) => {
+                    let valA = a[sortColumn] ?? ''; let valB = b[sortColumn] ?? '';
+                    if (typeof valA === 'number' && typeof valB === 'number') return sortDirection === 'asc' ? valA - valB : valB - valA;
+                    valA = String(valA); valB = String(valB);
+                    return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+            }
+        }
+
+        sorted.forEach((item, idx) => {
+            const tr = document.createElement('tr');
+
+            const scoreHtml = item.score !== null
+                ? `<span class="score-badge" style="${getScoreColorStyle(item.score)}" title="ISC stima ${yearsToRetirement}a e Rend stima ${yearsToRetirement}a">${item.score}</span>`
+                : '<span style="color:var(--text-muted);">-</span>';
+
+            const catClass = 'type-' + (item.categoria ? item.categoria.toLowerCase() : 'other');
+
+            const numCell = (val, key) => {
+                if (val === null || val === undefined) return '<td>-</td>';
+                const isImp = item._imputed && item._imputed[key];
+                const classes = [];
+                if (isImp) classes.push('imputed-val');
+                if (['isc10','isc35','r3','r5','r10','r20'].includes(key)) classes.push('official-col');
+                const clsAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
+                return `<td${clsAttr}>${val.toFixed(2)}%</td>`;
+            };
+
+            const stimaCell = (val) => {
+                if (val === null || val === undefined || isNaN(val)) return '<td>-</td>';
+                return `<td class="stima-val">${val.toFixed(2)}%</td>`;
+            };
+
+            tr.innerHTML = `
+                <td class="pos-pill"><span>${idx + 1}</span></td>
+                <td>${item.albo || '-'}</td>
+                <td class="fondo-cell">${escapeHtml(item.fondo || '-')}</td>
+                <td class="fondo-cell">${escapeHtml(item.comparto || '-')} ${item.note ? `<span class="note-tag">${escapeHtml(item.note)}</span>` : ''}</td>
+                <td><span class="type-tag ${catClass}">${item.categoria || 'ALTRO'}</span></td>
+                <td>${scoreHtml}</td>
+                ${numCell(item.isc10, 'isc10', true)}
+                ${numCell(item.isc35, 'isc35', true)}
+                ${stimaCell(item.iscStima)}
+                ${numCell(item.r3, 'r3', false)}
+                ${numCell(item.r5, 'r5', false)}
+                ${numCell(item.r10, 'r10', false)}
+                ${numCell(item.r20, 'r20', false)}
+                ${stimaCell(item.rendStima)}
+            `;
+            tbody.appendChild(tr);
+        });
+
+        cachedFilteredData = sorted;
+        updateScrollProgress();
+    }
+
+    function escapeHtml(str) { return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+    // ---------------- Scroll progress ----------------
+    function updateScrollProgress() {
+        const container = document.getElementById('tableContainer');
+        if (!container) return;
+        const fill = document.getElementById('scrollProgressFill');
+        if (!fill) return;
+        const scrollWidth = container.scrollWidth; const clientWidth = container.clientWidth;
+        if (scrollWidth <= clientWidth) { fill.style.width = '100%'; return; }
+        const scrollLeft = container.scrollLeft; const maxScroll = scrollWidth - clientWidth;
+        const progress = (scrollLeft / maxScroll) * 100;
+        fill.style.width = Math.min(100, Math.max(0, progress)) + '%';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('tableContainer');
+        if (container) { container.addEventListener('scroll', updateScrollProgress); window.addEventListener('resize', updateScrollProgress); }
+    });
+
+    // ---------------- Parametri (anni, tipo fondo) ----------------
+    function onYearsChange() {
+        const val = parseInt(document.getElementById('yearsToRetirement').value, 10);
+        yearsToRetirement = isNaN(val) || val < 1 ? 19 : val;
+        document.getElementById('thIscStima').textContent = `ISC stima ${yearsToRetirement}a`;
+        document.getElementById('thRendStima').textContent = `Rend stima ${yearsToRetirement}a`;
+        savePrefs();
+        processAndRender();
+    }
+
+    // ---------------- Processing & filtri ----------------
+    function processAndRender() {
+        const merged = mergeDatasets(mainIscData, mainRendData);
+        const scored = calculateScores(merged);
+
+        const onlyMatched = document.getElementById('onlyMatched').checked;
+        const filterAlbo = (document.getElementById('filterAlbo')?.value || '').toLowerCase().trim();
+        const filterFondo = (document.getElementById('filterFondo')?.value || '').toLowerCase().trim();
+        const filterComparto = (document.getElementById('filterComparto')?.value || '').toLowerCase().trim();
+        const filterCatCol = document.getElementById('filterCategoriaCol').value;
+
+        const filtered = scored.filter(item => {
+            if (onlyMatched && (!item._hasIsc || !item._hasRend)) {
+                return false;
+            }
+            if (filterAlbo && !String(item.albo || '').toLowerCase().includes(filterAlbo)) return false;
+            if (filterFondo && !String(item.fondo || '').toLowerCase().includes(filterFondo)) return false;
+            if (filterComparto && !String(item.comparto || '').toLowerCase().includes(filterComparto)) return false;
+            if (filterCatCol !== 'ALL' && item.categoria !== filterCatCol) return false;
+            return true;
+        });
+
+        document.getElementById('countIsc').innerText = mainIscData.length;
+        document.getElementById('countRend').innerText = mainRendData.length;
+        document.getElementById('countFiltered').innerText = filtered.length;
+
+        renderTable(filtered);
+        updateStepVisibility();
+    }
+
+    // ---------------- Peso ISC ----------------
+    function updateWeight() {
+        const slider = document.getElementById('weightSlider');
+        iscWeight = parseInt(slider.value);
+        const rendWeight = 100 - iscWeight;
+        document.getElementById('weightDisplay').textContent = `${iscWeight}% ISC / ${rendWeight}% Rend`;
+        document.getElementById('weightLabel').textContent = `${iscWeight}% ISC`;
+        document.getElementById('weightLabelRend').textContent = `${rendWeight}% Rendimento`;
+        savePrefs();
+        processAndRender();
+    }
+
+    function setWeight(value) { document.getElementById('weightSlider').value = value; updateWeight(); }
+
+    // ---------------- Ordinamento ----------------
+    document.addEventListener('click', function(e) {
+        const th = e.target.closest('th[data-col]');
+        if (!th) return;
+        const col = th.dataset.col;
+        if (col === 'pos') return;
+        if (sortColumn === col) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        else { sortColumn = col; sortDirection = 'desc'; }
+        processAndRender();
+    });
+
+    // ---------------- Esportazione ----------------
+    function getFormattedFilename(extension) {
+        const now = new Date();
+        const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+        const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0');
+        const rendWeight = 100 - iscWeight;
+        return `apericovip-${dateStr}-${timeStr}-${iscWeight}isc+${rendWeight}rend.${extension}`;
+    }
+
+    function exportData(format) {
+        if (!cachedFilteredData || cachedFilteredData.length === 0) { alert('Nessun dato da esportare.'); return; }
+
+        const headers = ['Pos.', 'N. Albo', 'Fondo', 'Comparto', 'Categoria', 'Punteggio',
+                         'ISC 10a', 'ISC 35a', `ISC stima ${yearsToRetirement}a`,
+                         'Rend 3a', 'Rend 5a', 'Rend 10a', 'Rend 20a', `Rend stima ${yearsToRetirement}a`];
+
+        const rows = cachedFilteredData.map((item, idx) => [
+            idx + 1, item.albo || '', item.fondo || '', item.comparto || '', item.categoria || '',
+            item.score !== null ? item.score : '',
+            item.isc10 !== null ? item.isc10 : '', item.isc35 !== null ? item.isc35 : '',
+            item.iscStima !== null && item.iscStima !== undefined ? item.iscStima : '',
+            item.r3 !== null ? item.r3 : '', item.r5 !== null ? item.r5 : '', item.r10 !== null ? item.r10 : '', item.r20 !== null ? item.r20 : '',
+            item.rendStima !== null && item.rendStima !== undefined ? item.rendStima : ''
+        ]);
+
+        const data = [headers, ...rows];
+
+        if (format === 'xlsx') {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, 'Fondi');
+            XLSX.writeFile(wb, getFormattedFilename('xlsx'));
+        } else if (format === 'csv') {
+            const csv = data.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); link.download = getFormattedFilename('csv'); link.click(); URL.revokeObjectURL(link.href);
+        } else if (format === 'tsv') {
+            const tsv = data.map(row => row.join('\t')).join('\n');
+            const blob = new Blob(['\uFEFF' + tsv], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); link.download = getFormattedFilename('tsv'); link.click(); URL.revokeObjectURL(link.href);
+        }
+    }
+
+    // ---------------- Upload manuale ----------------
+    function handleIscUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const workbook = XLSX.read(evt.target.result, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                const parsed = iscRowsFromAOA(aoa);
+                const raw = createRawRowsFromAOA(aoa);
+
+                if (parsed.length > 0) {
+                    mainIscData = parsed;
+                    rawIscData = raw;
+                    showStatus('iscStatus', `Caricate ${parsed.length} righe da ${file.name}`, 'ok');
+                    processAndRender();
+                    refreshRawView();
+                } else {
+                    showStatus('iscStatus', 'File XLSX non riconosciuto o nessuna riga valida trovata.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showStatus('iscStatus', 'Errore durante la lettura del file: ' + err.message, 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function handleRendUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const workbook = XLSX.read(evt.target.result, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                const parsed = rendRowsFromAOA(aoa);
+                const raw = createRawRowsFromAOA(aoa);
+
+                if (parsed.length > 0) {
+                    mainRendData = parsed;
+                    rawRendData = raw;
+                    showStatus('rendStatus', `Caricate ${parsed.length} righe da ${file.name}`, 'ok');
+                    processAndRender();
+                    refreshRawView();
+                } else {
+                    showStatus('rendStatus', 'File XLSX non riconosciuto o nessuna riga valida trovata.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showStatus('rendStatus', 'Errore durante la lettura del file: ' + err.message, 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function showStatus(elemId, msg, type) {
+        const el = document.getElementById(elemId);
+        el.innerText = msg; el.className = 'file-status ' + type;
+    }
+
+    // Converte l'array di righe XLSX in oggetti per la visualizzazione dei dati grezzi.
+    function createRawRowsFromAOA(aoa) {
+        if (!Array.isArray(aoa) || aoa.length < 2) return [];
+
+        const headers = (aoa[0] || []).map((h, i) => {
+            const text = String(h == null ? '' : h).trim();
+            return text || `col${i + 1}`;
+        });
+
+        return aoa.slice(1)
+            .filter(row => Array.isArray(row) && row.some(c => c !== '' && c !== null && c !== undefined))
+            .map(row => {
+                const obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = row[i] !== undefined && row[i] !== null ? row[i] : '';
+                });
+                return obj;
+            });
+    }
+
+    // ---------------- Visualizzazione file grezzi / dati parsati ----------------
+    function renderRawTable(data, tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 10;
+            cell.style.textAlign = 'center';
+            cell.style.padding = '1rem';
+            cell.style.color = 'var(--text-muted)';
+            cell.textContent = 'Nessun dato caricato.';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+
+        const allKeysRaw = Array.from(data.reduce((keys, row) => {
+            Object.keys(row).forEach(k => keys.add(k));
+            return keys;
+        }, new Set(Object.keys(data[0]))));
+
+        // Nasconde le colonne che, su tutte le righe, sono vuote, null/undefined o "-"
+        const isBlankValue = (v) => v === null || v === undefined || String(v).trim() === '' || String(v).trim() === '-';
+        const allKeys = allKeysRaw.filter(key => data.some(row => !isBlankValue(row[key])));
+
+        const headerRow = document.createElement('tr');
+        allKeys.forEach(key => {
+            const th = document.createElement('th');
+            th.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
+        data.forEach(rowData => {
+            const tr = document.createElement('tr');
+            allKeys.forEach(key => {
+                const td = document.createElement('td');
+                let value = rowData[key];
+                if (value === null || value === undefined || value === '') value = '-';
+                else if (typeof value === 'number') {
+                    if (key.toLowerCase() === 'albo' || Number.isInteger(value)) value = value.toString();
+                    else value = value.toFixed(2);
+                }
+                td.textContent = value;
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    }
+
+    function refreshRawView() {
+        renderRawTable(rawRendData, 'rawRendTable');
+        renderRawTable(rawIscData, 'rawIscTable');
+    }
+
+    function updateStepVisibility() {
+        const bothLoaded = mainIscData.length > 0 && mainRendData.length > 0;
+        ['stepRaw', 'stepFilter', 'stepExplore', 'stepExport'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('hidden-step', !bothLoaded);
+        });
+    }
+
+    function toggleRawRendVisibility() {
+        const section = document.getElementById('rawRendSection');
+        const btn = document.getElementById('toggleRawRendButton');
+        if (!section || !btn) return;
+        const visible = section.classList.toggle('visible');
+        btn.textContent = visible ? '🙈 Nascondi rendimenti grezzi' : '👁️ Mostra rendimenti grezzi';
+    }
+
+    function toggleRawIscVisibility() {
+        const section = document.getElementById('rawIscSection');
+        const btn = document.getElementById('toggleRawIscButton');
+        if (!section || !btn) return;
+        const visible = section.classList.toggle('visible');
+        btn.textContent = visible ? '🙈 Nascondi ISC grezzi' : '👁️ Mostra ISC grezzi';
+    }
+
+    function toggleOfficialColumns() {
+        const table = document.getElementById('fundsDataTable');
+        const btn = document.getElementById('toggleOfficialColumnsBtn');
+        if (!table || !btn) return;
+        const hidden = table.classList.toggle('official-hidden');
+        btn.textContent = hidden ? '👁️ Mostra colonne ufficiali' : '🙈 Nascondi colonne ufficiali';
+    }
+
+    // ---------------- Inizializzazione ----------------
+    window.onload = function() {
+        loadPrefs();
+        const onlyMatched = document.getElementById('onlyMatched');
+        if (onlyMatched) onlyMatched.checked = true;
+        processAndRender();
+        refreshRawView();
+        setTimeout(updateScrollProgress, 100);
+    };
+</script>
+
+</body>
+</html>
