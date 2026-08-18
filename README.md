@@ -1,6 +1,6 @@
 > [!CAUTION]
 > Sviluppo e test in corso!  
-> I risultati restituiti non sono ancora affidabili.
+> I risultati restituiti non sono ancora 100% completi, c'è qualche problemino residuo nel parsing degli XLSX COVIP.
 
 ```
                     _  ___         _
