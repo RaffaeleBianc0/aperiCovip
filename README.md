@@ -21,7 +21,12 @@ Confronta i fondi pensione italiani usando dati ufficiali COVIP.
 Questa applicazione è pensata per analisi informative e non sostituisce le informazioni ufficiali COVIP.
 
 # Extra
+aperiCovip è online ed utilizzabile qui:  
+https://www.raffaelebianco.it/apericovip
+
 Gli altri contenuti che ho pubblicato sul tema della finanza personale sono qui:  
 https://www.raffaelebianco.it/blog/categories/finanza-personale/
+
+---
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I3I5MBHBZ)
