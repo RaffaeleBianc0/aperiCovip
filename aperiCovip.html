@@ -16,6 +16,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>aperiCovip</title>
+
+    <!-- Umami site stats -->
+	<script defer src="https://cloud.umami.is/script.js" data-website-id="cbdc4f19-dd25-44f1-a198-8b40b312f1f1"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -72,13 +76,14 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             font-size: 0.95rem;
         }
 
-        /* ---- Step layout ---- */
+        /* ---- Step layout separati con sfondo visibile ---- */
         .step-block {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
             overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
         }
 
         .step-header {
@@ -245,20 +250,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             flex-wrap: wrap;
         }
 
-        .radio-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
         .file-status {
             font-size: 0.78rem;
             min-height: 1.1rem;
@@ -285,31 +276,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             border-color: rgba(56, 189, 248, 0.3);
         }
 
-        .banner.warn {
-            background-color: rgba(245, 158, 11, 0.08);
-            color: var(--warning);
-            border-color: rgba(245, 158, 11, 0.3);
-        }
-
-        .banner.ok {
-            background-color: rgba(34, 197, 94, 0.08);
-            color: var(--success);
-            border-color: rgba(34, 197, 94, 0.3);
-        }
-
-        .manual-panel {
-            display: none;
-            flex-direction: column;
-            gap: 1rem;
-            border-top: 1px dashed var(--border);
-            padding-top: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .manual-panel.visible {
-            display: flex;
-        }
-
         .import-row {
             display: flex;
             gap: 1.5rem;
@@ -324,23 +290,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             gap: 0.4rem;
         }
 
-        .view-pre {
-            display: none;
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.8rem;
-            font-size: 0.72rem;
-            max-height: 320px;
-            overflow: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .view-pre.visible {
-            display: block;
-        }
-
         .hidden-step {
             display: none;
         }
@@ -351,10 +300,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
         .collapsed-section {
             display: none;
-        }
-
-        .collapsed-section.visible {
-            display: block;
         }
 
         .filter-group {
@@ -492,20 +437,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             min-width: 200px;
         }
 
-        td.metric-used {
-            color: var(--accent);
-            font-weight: 700;
-            position: relative;
-        }
-
-        td.metric-used::after {
-            content: "●";
-            font-size: 0.55rem;
-            vertical-align: super;
-            margin-left: 3px;
-            color: var(--accent);
-        }
-
         td.imputed-val {
             font-style: italic;
             opacity: 0.85;
@@ -520,10 +451,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
         td.stima-val {
             font-weight: 800;
             color: #fbbf24;
-            font-size: 0.95rem;
-        }
-
-        .score-badge {
             font-size: 0.95rem;
         }
 
@@ -545,6 +472,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
         .score-badge {
             display: inline-block;
+            font-size: 0.95rem;
             font-weight: bold;
             padding: 0.25rem 0.65rem;
             border-radius: 6px;
@@ -561,35 +489,11 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             font-weight: 700;
         }
 
-        .type-azn {
-            background-color: #ef444420;
-            color: #f87171;
-        }
-
-        .type-bil {
-            background-color: #22c55e20;
-            color: #4ade80;
-        }
-
-        .type-obb {
-            background-color: #3b82f620;
-            color: #60a5fa;
-        }
-
-        .type-gar {
-            background-color: #8b451325;
-            color: #c9834f;
-        }
-
-        .type-other {
-            background-color: #64748b20;
-            color: #94a3b8;
-        }
-
-        .note-tag {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
+        .type-azn { background-color: #ef444420; color: #f87171; }
+        .type-bil { background-color: #22c55e20; color: #4ade80; }
+        .type-obb { background-color: #3b82f620; color: #60a5fa; }
+        .type-gar { background-color: #8b451325; color: #c9834f; }
+        .type-other { background-color: #64748b20; color: #94a3b8; }
 
         .legend {
             font-size: 0.78rem;
@@ -600,18 +504,8 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             flex-wrap: wrap;
         }
 
-        .legend .dot {
-            color: var(--accent);
-        }
-
-        .legend .imp {
-            color: var(--warning);
-        }
-
-        .legend .stima {
-            color: #fbbf24;
-            font-weight: 800;
-        }
+        .legend .imp { color: var(--warning); }
+        .legend .stima { color: #fbbf24; font-weight: 800; }
 
         .status-bar {
             font-size: 0.8rem;
@@ -621,11 +515,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.5rem;
+            align-items: center;
         }
 
-        .status-bar strong {
-            color: var(--accent);
-        }
+        .status-bar strong { color: var(--accent); }
 
         footer {
             margin-top: 1.5rem;
@@ -638,7 +531,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
         }
 
         .expandable-block summary {
@@ -653,41 +546,21 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             list-style: none;
         }
 
-        .expandable-block summary::-webkit-details-marker {
-            display: none;
-        }
-
+        .expandable-block summary::-webkit-details-marker { display: none; }
         .expandable-block summary::before {
             content: "▶";
             font-size: 0.7rem;
             transition: transform 0.2s;
             display: inline-block;
         }
-
-        .expandable-block[open] summary::before {
-            transform: rotate(90deg);
-        }
-
-        .expandable-block summary:hover {
-            background-color: rgba(255, 255, 255, 0.03);
-        }
+        .expandable-block[open] summary::before { transform: rotate(90deg); }
+        .expandable-block summary:hover { background-color: rgba(255, 255, 255, 0.03); }
 
         .expandable-block .block-content {
             padding: 0.8rem 1.2rem 1.2rem;
             border-top: 1px solid var(--border);
             color: var(--text-muted);
             font-size: 0.9rem;
-        }
-
-        .expandable-block .block-content code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.1rem 0.35rem;
-            border-radius: 4px;
-            color: var(--text-main);
-        }
-
-        .expandable-block .block-content .warning-text {
-            color: var(--warning);
         }
 
         .expandable-block .block-content ul,
@@ -698,23 +571,116 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             gap: 0.4rem;
         }
 
+        /* ---- Modal / Popup stile per Discrepanze ---- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 850px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: var(--warning);
+            font-size: 1.1rem;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-close:hover { color: var(--text-main); }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .mismatch-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .mismatch-list {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .mismatch-list h4 {
+            color: var(--accent);
+            font-size: 0.82rem;
+            margin-bottom: 0.5rem;
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            padding-bottom: 0.2rem;
+        }
+
+        .mismatch-item {
+            padding: 0.3rem 0;
+            border-bottom: 1px dotted var(--border);
+            font-size: 0.78rem;
+        }
+
+        .btn-link-warn {
+            background: transparent;
+            border: none;
+            color: var(--warning);
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0;
+            font-size: 0.8rem;
+        }
+
         @media (max-width: 700px) {
-            .row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .field {
-                min-width: unset;
-            }
-
-            .import-row {
-                flex-direction: column;
-            }
-
-            .export-bar {
-                flex-wrap: wrap;
-            }
+            .row { flex-direction: column; align-items: stretch; }
+            .field { min-width: unset; }
+            .import-row { flex-direction: column; }
+            .export-bar { flex-wrap: wrap; }
+            .mismatch-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -738,26 +704,14 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             <details class="expandable-block">
                 <summary>⚠️ Disclaimer</summary>
                 <div class="block-content">
-                    <p class="warning-text" style="margin-bottom: 0.8rem;"><strong>Importante:</strong> Questo strumento
-                        è fornito a scopo puramente indicativo e informativo.</p>
+                    <p style="color:var(--warning); margin-bottom: 0.8rem;"><strong>Importante:</strong> Questo strumento è fornito a scopo puramente indicativo e informativo.</p>
                     <ul>
-                        <li>I dati visualizzati dipendono <strong>esclusivamente</strong> dai file Excel caricati.
-                            L'elaborazione potrebbe mostrare dati non corretti a seconda della struttura o del contenuto
-                            del file di input.</li>
-                        <li>Le imputazioni dei dati mancanti vengono effettuate utilizzando la <strong>media della
-                                categoria</strong> (AZN, BIL, OBB, GAR) e possono non rappresentare la realtà effettiva
-                            del singolo fondo.</li>
-                        <li>Le colonne "stima" sono ottenute per <strong>estrapolazione statistica</strong> dai valori
-                            ISC/Rendimento disponibili e sono puramente indicative.</li>
-                        <li>Il punteggio calcolato è basato su una <strong>metodologia proprietaria</strong> (peso ISC +
-                            Rendimento) e non rappresenta alcuna classificazione ufficiale COVIP.</li>
-                        <li>I dati mancanti in input (<em>esempio: il rendimento a 10 anni perché il fondo è nato 7 anni fa</em>) vengono stimati con la <strong>media della stessa categoria</strong> (AZN, BIL, OBB, GAR) di fondi, per lo stesso dato.</li>
-                        <li>Per ogni fondo/comparto vengono calcolati ISC e rendimento attesi per la durata in anni che imposti, per estrapolazione dai dati ufficiali.<br /></li>
-                        <li>Si raccomanda di <strong>verificare sempre i dati ufficiali</strong> pubblicati da COVIP
-                            prima di prendere qualsiasi decisione.</li>
-                        <li>L'utilizzo di questo strumento è a <strong>esclusivo rischio dell'utente</strong>. Lo
-                            sviluppatore non si assume alcuna responsabilità per errori, omissioni o danni derivanti
-                            dall'uso dei dati qui presentati.</li>
+                        <li>I dati visualizzati dipendono <strong>esclusivamente</strong> dai file Excel caricati.</li>
+                        <li>Le imputazioni dei dati mancanti vengono effettuate utilizzando la <strong>media della categoria</strong> (AZN, BIL, OBB, GAR).</li>
+                        <li>Le colonne "stima" sono ottenute per <strong>estrapolazione/interpolazione statistica</strong> dai valori disponibili.</li>
+                        <li>Il punteggio calcolato è basato su una <strong>metodologia proprietaria</strong> e non rappresenta alcuna classificazione ufficiale COVIP.</li>
+                        <li>Si raccomanda di <strong>verificare sempre i dati ufficiali</strong> pubblicati da COVIP prima di prendere qualsiasi decisione.</li>
+                        <li>L'utilizzo di questo strumento è a <strong>esclusivo rischio dell'utente</strong>.</li>
                     </ul>
                 </div>
             </details>
@@ -768,14 +722,13 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     <div class="step-num">1</div>
                     <div>
                         <div class="step-title">Scarica i dati ufficiali COVIP</div>
-                        <div class="step-instructions">Apri le pagine del sito COVIP dove scaricare manualmente i 2 file Excel, rispettivamente quello degli ISC (Indicatori Sintetici di Costo) e dei Rendimenti passati per tutti i fondi pensione disponibili in Italia, sia negoziali che aperti (scegli tu).
+                        <div class="step-instructions">Apri le pagine del sito COVIP dove scaricare manualmente i 2 file Excel, rispettivamente quello degli ISC (Indicatori Sintetici di Costo) e dei Rendimenti passati per tutti i fondi pensione disponibili in Italia.</div>
                     </div>
                 </div>
                 <div class="step-body">
                     <div class="row" style="align-items:center;">
                         <a href="https://www.covip.it/isc_dinamico/" target="_blank" class="btn">🔗 Apri pagina ISC COVIP</a>
-                        <a href="https://www.covip.it/per-gli-operatori/fondi-pensione/costi-e-rendimenti-dei-fondi-pensione/elenco-dei-rendimenti"
-                            target="_blank" class="btn">🔗 Apri pagina Rendimenti COVIP</a>
+                        <a href="https://www.covip.it/per-gli-operatori/fondi-pensione/costi-e-rendimenti-dei-fondi-pensione/elenco-dei-rendimenti" target="_blank" class="btn">🔗 Apri pagina Rendimenti COVIP</a>
                     </div>
                 </div>
             </div>
@@ -796,47 +749,23 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                             <label for="iscInput">Carica file ISC (.xlsx):</label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="iscInput" accept=".xlsx" onchange="handleIscUpload(event)">
-                                <button class="btn btn-secondary btn-sm" onclick="toggleRawIscVisibility()"
-                                    id="toggleRawIscButton" style="display:none; white-space:nowrap;">👁️ Mostra ISC grezzi</button>
+                                <button class="btn btn-secondary btn-sm" onclick="toggleRawIscVisibility()" id="toggleRawIscButton" style="display:none; white-space:nowrap;">👁️ Mostra ISC grezzi</button>
                             </div>
                             <div id="iscStatus" class="file-status"></div>
-                            <div class="file-status" id="lastIscPath"
-                                style="font-size:0.8rem; color:var(--text-muted);"></div>
+                            <div class="file-status" id="lastIscPath" style="font-size:0.8rem; color:var(--text-muted);"></div>
                         </div>
                         <div class="import-col">
                             <h3>Rendimenti</h3>
                             <label for="rendInput">Carica file Rendimenti (.xlsx):</label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="rendInput" accept=".xlsx" onchange="handleRendUpload(event)">
-                                <button class="btn btn-secondary btn-sm" onclick="toggleRawRendVisibility()"
-                                    id="toggleRawRendButton" style="display:none; white-space:nowrap;">👁️ Mostra rendimenti grezzi</button>
+                                <button class="btn btn-secondary btn-sm" onclick="toggleRawRendVisibility()" id="toggleRawRendButton" style="display:none; white-space:nowrap;">👁️ Mostra rendimenti grezzi</button>
                             </div>
                             <div id="rendStatus" class="file-status"></div>
-                            <div class="file-status" id="lastRendPath"
-                                style="font-size:0.8rem; color:var(--text-muted);"></div>
+                            <div class="file-status" id="lastRendPath" style="font-size:0.8rem; color:var(--text-muted);"></div>
                         </div>
                     </div>
-                    <div class="banner info">
-                        Entrambi i file XLSX sono necessari.
-                    </div>
-                    <div id="rawIscSection" class="collapsed-section" style="margin-top:1rem;">
-                        <div class="table-container">
-                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>ISC Grezzi</strong></div>
-                            <table id="rawIscTable">
-                                <thead></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div id="rawRendSection" class="collapsed-section" style="margin-top:1rem;">
-                        <div class="table-container">
-                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>Rendimenti Grezzi</strong></div>
-                            <table id="rawRendTable">
-                                <thead></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <div class="banner info">Entrambi i file XLSX sono necessari.</div>
                 </div>
             </div>
 
@@ -846,23 +775,21 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     <div class="step-num">3</div>
                     <div>
                         <div class="step-title">Esplora la classifica</div>
-                        <div class="step-instructions">Imposta gli anni alla pensione e i filtri, poi clicca sulle intestazioni delle colonne per ordinare (di nuovo per invertire).</div>
+                        <div class="step-instructions">Imposta gli anni alla pensione e i filtri, poi clicca sulle intestazioni delle colonne per ordinare.</div>
                     </div>
                 </div>
                 <div class="step-body">
                     <div class="row" style="align-items:flex-end;">
                         <div class="field field-narrow">
                             <h3>Anni alla pensione</h3>
-                            <input type="number" id="yearsToRetirement" min="1" max="60" value="19"
-                                oninput="onYearsChange()">
-                            <span class="sub-label">Usato per calcolare la colonna "ISC stima" per estrapolazione.</span>
+                            <!-- Range aggiornato da 1 a 56 compresi -->
+                            <input type="number" id="yearsToRetirement" min="1" max="56" value="19" oninput="onYearsChange()">
+                            <span class="sub-label">Valore valido tra 1 e 56 anni.</span>
                         </div>
 
                         <div class="filter-group">
-                            <label for="onlyMatched"
-                                title="Filtra solo i comparti che contengono sia dati ISC sia dati Rendimenti originali, escludendo quelli con informazioni parziali.">
-                                <input type="checkbox" id="onlyMatched" onchange="processAndRender()"
-                                    style="width:auto;" checked>
+                            <label for="onlyMatched" title="Filtra solo i comparti che contengono sia dati ISC sia dati Rendimenti originali.">
+                                <input type="checkbox" id="onlyMatched" onchange="processAndRender()" style="width:auto;" checked>
                                 Solo comparti con entrambi i dati (ISC e Rendimento)
                             </label>
                         </div>
@@ -880,25 +807,20 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     </div>
 
                     <div class="legend">
-                        <div><span class="imp">(m)</span> = dato mancante, sostituito con la media della stessa
-                            categoria.</div>
-                        <div><span class="stima">grassetto</span> = colonna stimata per estrapolazione agli anni
-                            mancanti alla pensione, usata nel punteggio.</div>
+                        <div><span class="imp">(m)</span> = dato mancante, sostituito con la media della stessa categoria.</div>
+                        <div><span class="stima">grassetto</span> = colonna stimata per estrapolazione agli anni mancanti alla pensione.</div>
                     </div>
 
                     <div class="row" style="align-items:center;">
-                        <button class="btn btn-secondary btn-sm" onclick="toggleOfficialColumns()"
-                            id="toggleOfficialColumnsBtn">👁️ Mostra colonne ufficiali</button>
-                        <button class="btn btn-secondary btn-sm btn-active" onclick="toggleTop5()"
-                            id="toggleTop5Btn">📋 Mostra tutti i fondi</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleOfficialColumns()" id="toggleOfficialColumnsBtn">👁️ Mostra colonne ufficiali</button>
+                        <button class="btn btn-secondary btn-sm btn-active" onclick="toggleTop5()" id="toggleTop5Btn">📋 Mostra tutti i fondi</button>
                     </div>
 
                     <div class="status-bar">
-                        <span>Righe ISC caricate: <strong id="countIsc">0</strong> — Righe Rendimenti caricate: <strong
-                                id="countRend">0</strong> — Righe visualizzate: <strong
-                                id="countFiltered">0</strong></span>
-                        <span id="countMismatchWarning" style="color: var(--warning); display:none;">⚠️ Il numero di
-                            righe ISC e Rendimenti caricate non coincide.</span>
+                        <span>Righe ISC caricate: <strong id="countIsc">0</strong> — Righe Rendimenti caricate: <strong id="countRend">0</strong> — Righe visualizzate: <strong id="countFiltered">0</strong></span>
+                        <span id="countMismatchWarning" style="display:none;">
+                            ⚠️ <button class="btn-link-warn" onclick="openMismatchModal()">Il numero di righe ISC e Rendimenti non coincide. Clicca qui per i dettagli.</button>
+                        </span>
                     </div>
 
                     <div class="table-container" id="tableContainer">
@@ -914,15 +836,12 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                                     <th rowspan="2" data-col="fondo">Fondo</th>
                                     <th rowspan="2" data-col="comparto">Comparto</th>
                                     <th rowspan="2" data-col="categoria">Categoria</th>
-                                    <th rowspan="2" data-col="score">Punteggio</th>
+                                    <!-- Tooltip dettagliato sull'intestazione Punteggio -->
+                                    <th rowspan="2" data-col="score" title="Punteggio espresso in centesimi (0-100). Calcolato come media pesata della stima ISC e della stima Rendimento. Per l'ISC, costi più bassi generano un punteggio migliore; per il Rendimento, valori più alti generano un punteggio migliore. La scala è normalizzata (Min-Max) sui fondi attualmente visibili.">Punteggio ℹ️</th>
                                     <th class="group-isc official-col" colspan="4">ISC ufficiali</th>
-                                    <th id="thIscStima" data-col="iscStima" class="group-stima" rowspan="2"
-                                        title="Valore stimato dell'Indicatore Sintetico di Costo (ISC) estrapolato o interpolato in base agli anni mancanti alla pensione impostati, utilizzando i dati ISC ufficiali COVIP (2a, 5a, 10a, 35a).">ISC stima
-                                        19a</th>
+                                    <th id="thIscStima" data-col="iscStima" class="group-stima" rowspan="2" title="Valore stimato dell'ISC estrapolato dagli anni alla pensione.">ISC stima 19a</th>
                                     <th class="group-rend official-col" colspan="4">Rend ufficiali</th>
-                                    <th id="thRendStima" data-col="rendStima" class="group-stima" rowspan="2"
-                                        title="Valore stimato del rendimento atteso calcolato come media pesata dei rendimenti storici ufficiali COVIP (3a, 5a, 10a, 20a), attribuendo maggior peso ai periodi più recenti.">Rend stima
-                                        19a</th>
+                                    <th id="thRendStima" data-col="rendStima" class="group-stima" rowspan="2" title="Valore stimato del rendimento atteso.">Rend stima 19a</th>
                                 </tr>
                                 <tr>
                                     <th data-col="isc2" class="group-isc official-col">ISC 2a</th>
@@ -936,14 +855,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                                 </tr>
                                 <tr class="filter-row">
                                     <th></th>
-                                    <th><input type="text" id="filterAlbo" placeholder="Filtra..."
-                                            oninput="processAndRender()"></th>
-                                    <th><input type="text" id="filterSocieta" placeholder="Filtra..."
-                                            oninput="processAndRender()"></th>
-                                    <th><input type="text" id="filterFondo" placeholder="Filtra..."
-                                            oninput="processAndRender()"></th>
-                                    <th><input type="text" id="filterComparto" placeholder="Filtra..."
-                                            oninput="processAndRender()"></th>
+                                    <th><input type="text" id="filterAlbo" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                    <th><input type="text" id="filterSocieta" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                    <th><input type="text" id="filterFondo" placeholder="Filtra..." oninput="processAndRender()"></th>
+                                    <th><input type="text" id="filterComparto" placeholder="Filtra..." oninput="processAndRender()"></th>
                                     <th>
                                         <select id="filterCategoriaCol" onchange="processAndRender()">
                                             <option value="ALL">Tutte</option>
@@ -970,8 +885,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     <div class="step-num">4</div>
                     <div>
                         <div class="step-title">Esporta i risultati</div>
-                        <div class="step-instructions">Scarica la tabella filtrata e ordinata così com'è, nel formato
-                            che preferisci.</div>
+                        <div class="step-instructions">Scarica la tabella filtrata e ordinata così com'è.</div>
                     </div>
                 </div>
                 <div class="step-body">
@@ -985,9 +899,31 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             </div>
 
             <footer>
-                Dati elaborati sulla base degli Indicatori Sintetici di Costo (ISC) e dei Rendimenti medi annui
-                pubblicati da COVIP.
+                Dati elaborati sulla base degli Indicatori Sintetici di Costo (ISC) e dei Rendimenti medi annui pubblicati da COVIP.
             </footer>
+        </div>
+    </div>
+
+    <!-- POPUP / MODAL PER DISCREPANZE -->
+    <div id="mismatchModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>⚠️ Spiegazione Discrepanze tra File ISC e Rendimenti</h3>
+                <button class="modal-close" onclick="closeMismatchModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Il file ISC contiene <strong id="modalIscCount">0</strong> righe, mentre il file Rendimenti contiene <strong id="modalRendCount">0</strong> righe. Di seguito sono elencati i comparti presenti in uno solo dei due file che non trovano corrispondenza nell'altro:</p>
+                <div class="mismatch-grid">
+                    <div class="mismatch-list">
+                        <h4>Solo nel file ISC (<span id="onlyIscCount">0</span>)</h4>
+                        <div id="onlyIscContainer"></div>
+                    </div>
+                    <div class="mismatch-list">
+                        <h4>Solo nel file Rendimenti (<span id="onlyRendCount">0</span>)</h4>
+                        <div id="onlyRendContainer"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1001,12 +937,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
         let mainIscData = [];
         let mainRendData = [];
-        let rawIscData = [];
-        let rawRendData = [];
 
         let cachedFilteredData = [];
 
-        // ---------------- Preferenze utente (localStorage) ----------------
+        // ---------------- Preferenze utente ----------------
         const PREFS_KEY = 'apericovip_prefs_v1';
 
         function savePrefs() {
@@ -1015,7 +949,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     yearsToRetirement,
                     iscWeight
                 }));
-            } catch (err) { /* localStorage non disponibile: ignora */ }
+            } catch (err) { }
         }
 
         function loadPrefs() {
@@ -1024,7 +958,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                 if (!raw) return;
                 const prefs = JSON.parse(raw);
 
-                if (prefs.yearsToRetirement && prefs.yearsToRetirement > 0) {
+                if (prefs.yearsToRetirement && prefs.yearsToRetirement >= 1 && prefs.yearsToRetirement <= 56) {
                     yearsToRetirement = prefs.yearsToRetirement;
                     document.getElementById('yearsToRetirement').value = yearsToRetirement;
                     document.getElementById('thIscStima').textContent = `ISC stima ${yearsToRetirement}a`;
@@ -1037,10 +971,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     const rendWeight = 100 - iscWeight;
                     document.getElementById('weightDisplay').textContent = `${iscWeight}% ISC / ${rendWeight}% Rend`;
                 }
-            } catch (err) { /* localStorage non disponibile o dati corrotti: ignora */ }
+            } catch (err) { }
         }
 
-        // ---------------- Helper: split Emittente/Fondo ----------------
+        // ---------------- Helper & Normalizzazione ----------------
         function splitEmittenteFondo(nomeCompleto) {
             let name = String(nomeCompleto || '').trim();
             let emittente = name;
@@ -1056,19 +990,16 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             return { emittente: emittente || name, fondo: name };
         }
 
-        // ---------------- Header maps ----------------
         const ISC_HEADER_MAP = {
             'n. albo': 'albo', 'n albo': 'albo', 'albo': 'albo',
-            'società': 'societa', 'societa': 'societa', 'societa\'': 'societa',
-            'denominazione societaria': 'societa', 'societa manager': 'societa',
+            'società': 'societa', 'societa': 'societa',
             'fondo': 'fondo', 'denominazione fondo': 'fondo',
             'comparto': 'comparto', 'denominazione comparto': 'comparto',
-            'categ. comparto': 'categoria', 'categ comparto': 'categoria',
-            'categoria comparto': 'categoria', 'categoria': 'categoria',
-            'isc a 2 anni': 'isc2', 'isc 2 anni': 'isc2', 'isc2': 'isc2', 'isc 2': 'isc2',
-            'isc a 5 anni': 'isc5', 'isc 5 anni': 'isc5', 'isc5': 'isc5', 'isc 5': 'isc5',
-            'isc a 10 anni': 'isc10', 'isc 10 anni': 'isc10', 'isc10': 'isc10', 'isc 10': 'isc10',
-            'isc a 35 anni': 'isc35', 'isc 35 anni': 'isc35', 'isc35': 'isc35', 'isc 35': 'isc35'
+            'categ. comparto': 'categoria', 'categ comparto': 'categoria', 'categoria': 'categoria',
+            'isc a 2 anni': 'isc2', 'isc 2 anni': 'isc2', 'isc2': 'isc2',
+            'isc a 5 anni': 'isc5', 'isc 5 anni': 'isc5', 'isc5': 'isc5',
+            'isc a 10 anni': 'isc10', 'isc 10 anni': 'isc10', 'isc10': 'isc10',
+            'isc a 35 anni': 'isc35', 'isc 35 anni': 'isc35', 'isc35': 'isc35'
         };
 
         const REND_LABEL_MAP = {
@@ -1082,9 +1013,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             'r20': ['20 anni', 'ultimi 20 anni']
         };
 
-        function normalizeHeader(h) {
-            return String(h == null ? '' : h).trim().toLowerCase().replace(/\s+/g, ' ');
-        }
+        function normalizeHeader(h) { return String(h == null ? '' : h).trim().toLowerCase().replace(/\s+/g, ' '); }
 
         function parseNumValue(v) {
             if (v === null || v === undefined || v === '') return null;
@@ -1111,33 +1040,23 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             let str = String(val || '').trim();
             if (!str) return '';
             const idx = str.indexOf("S.p.a.");
-            if (idx !== -1) {
-                str = str.substring(0, idx + "S.p.a.".length).trim();
-            }
+            if (idx !== -1) str = str.substring(0, idx + "S.p.a.".length).trim();
             return str;
         }
 
         function cleanCompartoName(val) {
             let str = String(val || '').trim();
-            if (!str) return '';
-            return str.replace(/\s*\([^)]*\)/g, '').trim();
+            return str ? str.replace(/\s*\([^)]*\)/g, '').trim() : '';
         }
 
         function findHeaderRow(aoa, headerMap, maxRows = 30) {
             if (!aoa || !aoa.length) return -1;
-            let bestRow = -1;
-            let bestScore = -1;
-
+            let bestRow = -1, bestScore = -1;
             for (let r = 0; r < Math.min(aoa.length, maxRows); r++) {
                 const row = aoa[r] || [];
                 let score = 0;
-                row.forEach(cell => {
-                    if (headerMap[normalizeHeader(cell)]) score++;
-                });
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestRow = r;
-                }
+                row.forEach(cell => { if (headerMap[normalizeHeader(cell)]) score++; });
+                if (score > bestScore) { bestScore = score; bestRow = r; }
             }
             return bestScore > 0 ? bestRow : -1;
         }
@@ -1152,13 +1071,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             return colIndex;
         }
 
-        // ---------------- ISC parsing ----------------
         function iscRowsFromAOA(aoa) {
             if (!aoa || aoa.length < 2) return [];
-
             const headerRow = findHeaderRow(aoa, ISC_HEADER_MAP, 30);
             if (headerRow < 0) return [];
-
             const colIndex = findColumnIndexes(aoa, headerRow, ISC_HEADER_MAP);
             if (colIndex.fondo === undefined || colIndex.comparto === undefined) return [];
 
@@ -1166,19 +1082,15 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             for (let r = headerRow + 1; r < aoa.length; r++) {
                 const row = aoa[r];
                 if (!row || row.every(c => c === '' || c === undefined || c === null)) continue;
-
                 const get = key => colIndex[key] !== undefined ? row[colIndex[key]] : '';
                 const fondo = String(get('fondo') || '').trim();
                 const comparto = cleanCompartoName(get('comparto'));
                 if (!fondo || !comparto) continue;
 
-                const rawSocieta = String(get('societa') || '').trim();
-
                 out.push({
                     albo: normalizeMissingValue(get('albo')),
-                    societaIsc: cleanSocietaName(rawSocieta),
-                    fondo,
-                    comparto,
+                    societaIsc: cleanSocietaName(String(get('societa') || '').trim()),
+                    fondo, comparto,
                     categoria: normalizeCategoria(get('categoria')),
                     isc2: parseNumValue(get('isc2')),
                     isc5: parseNumValue(get('isc5')),
@@ -1189,13 +1101,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             return out;
         }
 
-        // ---------------- Rendimenti parsing ----------------
         function rendRowsFromAOA(aoa) {
             if (!aoa || aoa.length < 2) return [];
-
             const scanRows = Math.min(aoa.length, 15);
-            const colFor = {};
-            const rowFor = {};
+            const colFor = {}, rowFor = {};
 
             for (let r = 0; r < scanRows; r++) {
                 const row = aoa[r] || [];
@@ -1203,64 +1112,47 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     const cellText = normalizeHeader(row[c]);
                     if (!cellText) continue;
                     Object.keys(REND_LABEL_MAP).forEach(field => {
-                        const labels = REND_LABEL_MAP[field];
-                        for (const lab of labels) {
+                        for (const lab of REND_LABEL_MAP[field]) {
                             if (cellText === lab || cellText.includes(lab)) {
-                                colFor[field] = c;
-                                rowFor[field] = r;
-                                break;
+                                colFor[field] = c; rowFor[field] = r; break;
                             }
                         }
                     });
                 }
             }
-
             if (colFor.comparto === undefined) return [];
-
             const headerRows = Object.values(rowFor);
             const dataStart = (headerRows.length ? Math.max(...headerRows) : 0) + 1;
 
             const out = [];
-            let lastAlbo = '';
-            let lastFondo = '';
+            let lastAlbo = '', lastFondo = '';
 
             for (let r = dataStart; r < aoa.length; r++) {
                 const row = aoa[r];
                 if (!row || row.every(c => c === '' || c === undefined || c === null)) continue;
-
-                const get = (field) => (colFor[field] !== undefined ? row[colFor[field]] : '');
-
+                const get = field => (colFor[field] !== undefined ? row[colFor[field]] : '');
                 let comparto = cleanCompartoName(get('comparto'));
                 if (!comparto) continue;
 
                 let alboVal = normalizeMissingValue(get('albo'));
                 let fondoVal = normalizeMissingValue(get('fondo'));
 
-                if (alboVal !== '') lastAlbo = alboVal;
-                else alboVal = lastAlbo;
-
-                if (fondoVal !== '') lastFondo = fondoVal;
-                else fondoVal = lastFondo;
+                if (alboVal !== '') lastAlbo = alboVal; else alboVal = lastAlbo;
+                if (fondoVal !== '') lastFondo = fondoVal; else fondoVal = lastFondo;
 
                 out.push({
-                    albo: alboVal,
-                    fondo: fondoVal,
-                    comparto: comparto,
+                    albo: alboVal, fondo: fondoVal, comparto: comparto,
                     categoria: normalizeCategoria(get('categoria')),
-                    r3: parseNumValue(get('r3')),
-                    r5: parseNumValue(get('r5')),
-                    r10: parseNumValue(get('r10')),
-                    r20: parseNumValue(get('r20'))
+                    r3: parseNumValue(get('r3')), r5: parseNumValue(get('r5')),
+                    r10: parseNumValue(get('r10')), r20: parseNumValue(get('r20'))
                 });
             }
-
             return out.filter(r => r.fondo && r.comparto);
         }
 
         function normalizeMissingValue(value) {
             const str = String(value || '').trim();
-            if (!str || str === '-' || str.toLowerCase() === 'n.d.' || str.toLowerCase() === 'nd') return '';
-            return str;
+            return (!str || str === '-' || str.toLowerCase() === 'n.d.' || str.toLowerCase() === 'nd') ? '' : str;
         }
 
         // ---------------- File Handlers ----------------
@@ -1268,40 +1160,29 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             const file = event.target.files[0];
             const statusEl = document.getElementById('iscStatus');
             const pathEl = document.getElementById('lastIscPath');
-            const btnEl = document.getElementById('toggleRawIscButton');
             if (!file) return;
 
             statusEl.textContent = 'Caricamento in corso...';
-            statusEl.className = 'file-status';
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                    rawIscData = createRawRowsFromAOA(aoa);
+                    const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
                     mainIscData = iscRowsFromAOA(aoa);
 
                     if (mainIscData.length > 0) {
                         statusEl.textContent = `✓ Caricate ${mainIscData.length} righe ISC`;
                         statusEl.className = 'file-status ok';
                         pathEl.textContent = file.name;
-                        btnEl.style.display = 'inline-flex';
                     } else {
                         statusEl.textContent = '❌ Nessun dato valido trovato nel file ISC';
                         statusEl.className = 'file-status error';
-                        btnEl.style.display = 'none';
                     }
-                    refreshRawView();
                     processAndRender();
                 } catch (err) {
                     statusEl.textContent = '❌ Errore nella lettura del file ISC';
                     statusEl.className = 'file-status error';
-                    btnEl.style.display = 'none';
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1311,63 +1192,46 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             const file = event.target.files[0];
             const statusEl = document.getElementById('rendStatus');
             const pathEl = document.getElementById('lastRendPath');
-            const btnEl = document.getElementById('toggleRawRendButton');
             if (!file) return;
 
             statusEl.textContent = 'Caricamento in corso...';
-            statusEl.className = 'file-status';
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                    rawRendData = createRawRowsFromAOA(aoa);
+                    const aoa = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
                     mainRendData = rendRowsFromAOA(aoa);
 
                     if (mainRendData.length > 0) {
                         statusEl.textContent = `✓ Caricate ${mainRendData.length} righe Rendimenti`;
                         statusEl.className = 'file-status ok';
                         pathEl.textContent = file.name;
-                        btnEl.style.display = 'inline-flex';
                     } else {
                         statusEl.textContent = '❌ Nessun dato valido trovato nel file Rendimenti';
                         statusEl.className = 'file-status error';
-                        btnEl.style.display = 'none';
                     }
-                    refreshRawView();
                     processAndRender();
                 } catch (err) {
                     statusEl.textContent = '❌ Errore nella lettura del file Rendimenti';
                     statusEl.className = 'file-status error';
-                    btnEl.style.display = 'none';
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // ---------------- Merge ISC + Rendimenti ----------------
+        // ---------------- Merge Datasets ----------------
         function normalizeMatchText(value) {
             return String(value || '')
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toUpperCase()
-                .replace(/[^A-Z0-9]+/g, ' ')
-                .trim()
-                .replace(/\s+/g, ' ');
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
         }
 
         function keyOf(fondo, comparto, albo) {
             const alboKey = normalizeMatchText(albo);
             const compartoKey = normalizeMatchText(comparto);
             const fondoKey = normalizeMatchText(fondo);
-
-            if (alboKey && compartoKey) return `ALBO:${alboKey}|||COMP:${compartoKey}`;
-            return `FONDO:${fondoKey}|||COMP:${compartoKey}`;
+            return (alboKey && compartoKey) ? `ALBO:${alboKey}|||COMP:${compartoKey}` : `FONDO:${fondoKey}|||COMP:${compartoKey}`;
         }
 
         function mergeDatasets(iscArr, rendArr) {
@@ -1377,19 +1241,11 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             iscArr.forEach(d => {
                 const ef = splitEmittenteFondo(d.fondo);
                 const item = {
-                    albo: d.albo,
-                    societaIsc: d.societaIsc,
-                    emittente: ef.emittente,
-                    fondo: ef.fondo,
-                    comparto: d.comparto,
-                    categoria: d.categoria,
-                    isc2: d.isc2,
-                    isc5: d.isc5,
-                    isc10: d.isc10,
-                    isc35: d.isc35,
+                    albo: d.albo, societaIsc: d.societaIsc, emittente: ef.emittente,
+                    fondo: ef.fondo, comparto: d.comparto, categoria: d.categoria,
+                    isc2: d.isc2, isc5: d.isc5, isc10: d.isc10, isc35: d.isc35,
                     r3: null, r5: null, r10: null, r20: null,
-                    _hasIsc: true,
-                    _hasRend: false
+                    _hasIsc: true, _hasRend: false
                 };
                 const primaryKey = keyOf(d.fondo, d.comparto, d.albo);
                 map.set(primaryKey, item);
@@ -1398,11 +1254,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
             rendArr.forEach(d => {
                 const primaryKey = keyOf(d.fondo, d.comparto, d.albo);
-                let matchedKey = map.has(primaryKey) ? primaryKey : null;
-
-                if (!matchedKey) {
-                    matchedKey = fallback.get(keyOf(d.fondo, d.comparto, '')) || null;
-                }
+                let matchedKey = map.has(primaryKey) ? primaryKey : fallback.get(keyOf(d.fondo, d.comparto, ''));
 
                 if (matchedKey && map.has(matchedKey)) {
                     const row = map.get(matchedKey);
@@ -1412,37 +1264,24 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     row._hasRend = true;
                 } else {
                     const ef = splitEmittenteFondo(d.fondo);
-                    const item = {
-                        albo: d.albo,
-                        societaIsc: '',
-                        emittente: ef.emittente,
-                        fondo: ef.fondo,
-                        comparto: d.comparto,
-                        categoria: d.categoria,
+                    map.set(primaryKey, {
+                        albo: d.albo, societaIsc: '', emittente: ef.emittente,
+                        fondo: ef.fondo, comparto: d.comparto, categoria: d.categoria,
                         isc2: null, isc5: null, isc10: null, isc35: null,
                         r3: d.r3, r5: d.r5, r10: d.r10, r20: d.r20,
-                        _hasIsc: false,
-                        _hasRend: true
-                    };
-                    map.set(primaryKey, item);
+                        _hasIsc: false, _hasRend: true
+                    });
                 }
             });
 
             return Array.from(map.values());
         }
 
-        // ---------------- Società ----------------
         function assignSocieta(data) {
-            data.forEach(item => {
-                if (item.societaIsc) {
-                    item.societa = item.societaIsc;
-                } else {
-                    item.societa = item.emittente || '';
-                }
-            });
+            data.forEach(item => { item.societa = item.societaIsc || item.emittente || ''; });
         }
 
-        // ---------------- Imputazione medie per categoria ----------------
+        // ---------------- Imputazione e Stime ----------------
         function computeAveragesAndImpute(data) {
             const numericCols = ['isc2', 'isc5', 'isc10', 'isc35', 'r3', 'r5', 'r10', 'r20'];
             const categories = ['AZN', 'BIL', 'OBB', 'GAR'];
@@ -1470,54 +1309,25 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                         newItem._imputed[col] = false;
                     }
                 });
-
                 return newItem;
             });
         }
 
-        function bestIsc(item) {
-            const order = [['isc35', '35a'], ['isc10', '10a'], ['isc5', '5a'], ['isc2', '2a']];
-            for (const [k, label] of order) {
-                if (item[k] !== null && item[k] !== undefined && !isNaN(item[k])) {
-                    return { key: k, value: item[k], label, isImputed: !!item._imputed[k] };
-                }
-            }
-            return { key: null, value: null, label: null, isImputed: false };
-        }
-
-        function bestRend(item) {
-            const order = [['r20', '20a'], ['r10', '10a'], ['r5', '5a'], ['r3', '3a']];
-            for (const [k, label] of order) {
-                if (item[k] !== null && item[k] !== undefined && !isNaN(item[k])) {
-                    return { key: k, value: item[k], label, isImputed: !!item._imputed[k] };
-                }
-            }
-            return { key: null, value: null, label: null, isImputed: false };
-        }
-
-        // ---------------- Estrapolazione lineare (colonne "stima") ----------------
         function interpolateOrExtrapolate(points, x) {
-            const pts = points
-                .filter(p => p[1] !== null && p[1] !== undefined && !isNaN(p[1]))
-                .sort((a, b) => a[0] - b[0]);
+            const pts = points.filter(p => p[1] !== null && p[1] !== undefined && !isNaN(p[1])).sort((a, b) => a[0] - b[0]);
             if (pts.length === 0) return null;
             if (pts.length === 1) return pts[0][1];
-
             if (x <= pts[0][0]) return pts[0][1];
             if (x >= pts[pts.length - 1][0]) {
                 const [x1, y1] = pts[pts.length - 2];
                 const [x2, y2] = pts[pts.length - 1];
                 return y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
             }
-
             for (let i = 0; i < pts.length - 1; i++) {
                 const [x1, y1] = pts[i];
                 const [x2, y2] = pts[i + 1];
-                if (x >= x1 && x <= x2) {
-                    return y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
-                }
+                if (x >= x1 && x <= x2) return y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
             }
-
             return pts[pts.length - 1][1];
         }
 
@@ -1538,15 +1348,11 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             item.rendStima = rendStima;
         }
 
-        // ---------------- Scoring con peso dinamico ----------------
         function calculateScores(data) {
             const imputedData = computeAveragesAndImpute(data);
-
             const enriched = imputedData.map(item => {
-                const bi = bestIsc(item);
-                const br = bestRend(item);
                 computeStimaColumns(item, yearsToRetirement);
-                return Object.assign({}, item, { _bi: bi, _br: br });
+                return item;
             });
 
             const iscVals = enriched.map(i => i.iscStima).filter(v => v !== null && !isNaN(v));
@@ -1561,15 +1367,12 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             const weightRend = 1 - weightIsc;
 
             const scoredData = enriched.map(item => {
-                let scoreIsc = null; let scoreRend = null;
-                const iscValue = item.iscStima;
-                const rendValue = item.rendStima;
-
-                if (iscValue !== null && !isNaN(iscValue)) {
-                    scoreIsc = maxIsc === minIsc ? 100 : ((maxIsc - iscValue) / (maxIsc - minIsc)) * 100;
+                let scoreIsc = null, scoreRend = null;
+                if (item.iscStima !== null && !isNaN(item.iscStima)) {
+                    scoreIsc = maxIsc === minIsc ? 100 : ((maxIsc - item.iscStima) / (maxIsc - minIsc)) * 100;
                 }
-                if (rendValue !== null && !isNaN(rendValue)) {
-                    scoreRend = maxRend === minRend ? 100 : ((rendValue - minRend) / (maxRend - minRend)) * 100;
+                if (item.rendStima !== null && !isNaN(item.rendStima)) {
+                    scoreRend = maxRend === minRend ? 100 : ((item.rendStima - minRend) / (maxRend - minRend)) * 100;
                 }
 
                 let finalScore = null;
@@ -1581,11 +1384,8 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                 return item;
             });
 
-            // Assegna la posizione naturale in base al punteggio decrescente
             const sortedByScore = [...scoredData].sort((a, b) => (b.score ?? -999) - (a.score ?? -999));
-            sortedByScore.forEach((item, index) => {
-                item.pos = index + 1;
-            });
+            sortedByScore.forEach((item, index) => { item.pos = index + 1; });
 
             return scoredData;
         }
@@ -1597,26 +1397,19 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             return `background-color: hsl(${hue}, 75%, 35%); border: 1px solid hsl(${hue}, 80%, 45%);`;
         }
 
-        // ---------------- Render tabella ----------------
+        // ---------------- Render Tabella ----------------
         function updateTableHeaderArrows() {
             document.querySelectorAll('th[data-col]').forEach(th => {
                 const col = th.dataset.col;
                 let text = th.childNodes[0] ? th.childNodes[0].nodeValue.trim() : th.textContent.trim();
                 text = text.replace(/\s+[▲▼]$/, '');
-                
                 if (col === sortColumn) {
                     const arrow = sortDirection === 'asc' ? ' ▲' : ' ▼';
-                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) {
-                        th.childNodes[0].nodeValue = text + arrow;
-                    } else {
-                        th.textContent = text + arrow;
-                    }
+                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) th.childNodes[0].nodeValue = text + arrow;
+                    else th.textContent = text + arrow;
                 } else {
-                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) {
-                        th.childNodes[0].nodeValue = text;
-                    } else {
-                        th.textContent = text;
-                    }
+                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) th.childNodes[0].nodeValue = text;
+                    else th.textContent = text;
                 }
             });
         }
@@ -1654,15 +1447,10 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             });
 
             cachedFilteredData = [...sorted];
-
-            let displayData = sorted;
-            if (showOnlyTop5) {
-                displayData = sorted.slice(0, 5);
-            }
+            let displayData = showOnlyTop5 ? sorted.slice(0, 5) : sorted;
 
             displayData.forEach((item) => {
                 const tr = document.createElement('tr');
-
                 const scoreFormatted = item.score !== null ? item.score.toFixed(1) : '0.0';
                 const scoreHtml = item.score !== null
                     ? `<span class="score-badge" style="${getScoreColorStyle(item.score)}" title="ISC stima ${yearsToRetirement}a e Rend stima ${yearsToRetirement}a">${scoreFormatted}</span>`
@@ -1675,8 +1463,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
                     const isImp = item._imputed && item._imputed[key];
                     const classes = ['official-col'];
                     if (isImp) classes.push('imputed-val');
-                    const clsAttr = ` class="${classes.join(' ')}"`;
-                    return `<td${clsAttr}>${val.toFixed(2)}%</td>`;
+                    return `<td class="${classes.join(' ')}">${val.toFixed(2)}%</td>`;
                 };
 
                 const stimaCell = (val) => {
@@ -1711,7 +1498,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
         function escapeHtml(str) { return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-        // ---------------- Scroll progress ----------------
         function updateScrollProgress() {
             const container = document.getElementById('tableContainer');
             if (!container) return;
@@ -1730,17 +1516,23 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             loadPrefs();
         });
 
-        // ---------------- Parametri (anni, tipo fondo) ----------------
+        // ---------------- Gestione Input e Range Anni (1-56) ----------------
         function onYearsChange() {
-            const val = parseInt(document.getElementById('yearsToRetirement').value, 10);
-            yearsToRetirement = isNaN(val) || val < 1 ? 19 : val;
+            const el = document.getElementById('yearsToRetirement');
+            let val = parseInt(el.value, 10);
+            if (isNaN(val)) val = 19;
+            if (val < 1) val = 1;
+            if (val > 56) val = 56;
+            el.value = val;
+            yearsToRetirement = val;
+            
             document.getElementById('thIscStima').textContent = `ISC stima ${yearsToRetirement}a`;
             document.getElementById('thRendStima').textContent = `Rend stima ${yearsToRetirement}a`;
             savePrefs();
             processAndRender();
         }
 
-        // ---------------- Processing & filtri ----------------
+        // ---------------- Processing & Filtri ----------------
         function processAndRender() {
             const merged = mergeDatasets(mainIscData, mainRendData);
             assignSocieta(merged);
@@ -1753,9 +1545,7 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             const filterCatCol = document.getElementById('filterCategoriaCol').value;
 
             const filteredData = merged.filter(item => {
-                if (onlyMatched && (!item._hasIsc || !item._hasRend)) {
-                    return false;
-                }
+                if (onlyMatched && (!item._hasIsc || !item._hasRend)) return false;
                 if (filterAlbo && !String(item.albo || '').toLowerCase().includes(filterAlbo)) return false;
                 if (filterSocieta && !String(item.societa || '').toLowerCase().includes(filterSocieta)) return false;
                 if (filterFondo && !String(item.fondo || '').toLowerCase().includes(filterFondo)) return false;
@@ -1780,7 +1570,41 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             updateStepVisibility();
         }
 
-        // ---------------- Peso ISC ----------------
+        // ---------------- Modal Discrepanze ----------------
+        function openMismatchModal() {
+            const modal = document.getElementById('mismatchModal');
+            document.getElementById('modalIscCount').textContent = mainIscData.length;
+            document.getElementById('modalRendCount').textContent = mainRendData.length;
+
+            const iscKeys = new Set(mainIscData.map(d => keyOf(d.fondo, d.comparto, d.albo)));
+            const rendKeys = new Set(mainRendData.map(d => keyOf(d.fondo, d.comparto, d.albo)));
+
+            const onlyIsc = mainIscData.filter(d => !rendKeys.has(keyOf(d.fondo, d.comparto, d.albo)));
+            const onlyRend = mainRendData.filter(d => !iscKeys.has(keyOf(d.fondo, d.comparto, d.albo)));
+
+            document.getElementById('onlyIscCount').textContent = onlyIsc.length;
+            document.getElementById('onlyRendCount').textContent = onlyRend.length;
+
+            const containerIsc = document.getElementById('onlyIscContainer');
+            containerIsc.innerHTML = onlyIsc.length ? '' : '<div class="mismatch-item" style="color:var(--text-muted)">Nessuna discrepanza</div>';
+            onlyIsc.forEach(item => {
+                containerIsc.innerHTML += `<div class="mismatch-item"><strong>[Albo ${item.albo || '-'}]</strong> ${escapeHtml(item.fondo)} - <em>${escapeHtml(item.comparto)}</em></div>`;
+            });
+
+            const containerRend = document.getElementById('onlyRendContainer');
+            containerRend.innerHTML = onlyRend.length ? '' : '<div class="mismatch-item" style="color:var(--text-muted)">Nessuna discrepanza</div>';
+            onlyRend.forEach(item => {
+                containerRend.innerHTML += `<div class="mismatch-item"><strong>[Albo ${item.albo || '-'}]</strong> ${escapeHtml(item.fondo)} - <em>${escapeHtml(item.comparto)}</em></div>`;
+            });
+
+            modal.classList.add('active');
+        }
+
+        function closeMismatchModal() {
+            document.getElementById('mismatchModal').classList.remove('active');
+        }
+
+        // ---------------- Controlli Interfaccia ----------------
         function updateWeight() {
             const slider = document.getElementById('weightSlider');
             iscWeight = parseInt(slider.value);
@@ -1792,7 +1616,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
 
         function setWeight(value) { document.getElementById('weightSlider').value = value; updateWeight(); }
 
-        // ---------------- Top 5 Filter ----------------
         function toggleTop5() {
             showOnlyTop5 = !showOnlyTop5;
             const btn = document.getElementById('toggleTop5Btn');
@@ -1806,7 +1629,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             processAndRender();
         }
 
-        // ---------------- Ordinamento ----------------
         document.addEventListener('click', function (e) {
             const th = e.target.closest('th[data-col]');
             if (!th) return;
@@ -1816,7 +1638,6 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             processAndRender();
         });
 
-        // ---------------- Gestione Step & Visibilità ----------------
         function updateStepVisibility() {
             const bothLoaded = mainIscData.length > 0 && mainRendData.length > 0;
             const stepExplore = document.getElementById('stepExplore');
@@ -1844,119 +1665,40 @@ Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
             updateScrollProgress();
         }
 
-        function toggleRawIscVisibility() {
-            const sectionIsc = document.getElementById('rawIscSection');
-            const btnIsc = document.getElementById('toggleRawIscButton');
-            const sectionRend = document.getElementById('rawRendSection');
-            const btnRend = document.getElementById('toggleRawRendButton');
-
-            // Se stiamo per aprire ISC, chiudiamo Rend
-            if (!sectionIsc.classList.contains('visible')) {
-                sectionRend.classList.remove('visible');
-                btnRend.textContent = '👁️ Mostra rendimenti grezzi';
-            }
-
-            sectionIsc.classList.toggle('visible');
-            btnIsc.textContent = sectionIsc.classList.contains('visible') ? '🙈 Nascondi ISC grezzi' : '👁️ Mostra ISC grezzi';
-        }
-
-        function toggleRawRendVisibility() {
-            const sectionRend = document.getElementById('rawRendSection');
-            const btnRend = document.getElementById('toggleRawRendButton');
-            const sectionIsc = document.getElementById('rawIscSection');
-            const btnIsc = document.getElementById('toggleRawIscButton');
-
-            // Se stiamo per aprire Rend, chiudiamo ISC
-            if (!sectionRend.classList.contains('visible')) {
-                sectionIsc.classList.remove('visible');
-                btnIsc.textContent = '👁️ Mostra ISC grezzi';
-            }
-
-            sectionRend.classList.toggle('visible');
-            btnRend.textContent = sectionRend.classList.contains('visible') ? '🙈 Nascondi rendimenti grezzi' : '👁️ Mostra rendimenti grezzi';
-        }
-
-        function refreshRawView() {
-            renderRawTable(rawIscData, 'rawIscTable');
-            renderRawTable(rawRendData, 'rawRendTable');
-        }
-
-        function createRawRowsFromAOA(aoa) {
-            if (!aoa || !aoa.length) return [];
-            return aoa;
-        }
-
-        function renderRawTable(aoa, tableId) {
-            const table = document.getElementById(tableId);
-            if (!table) return;
-            const thead = table.querySelector('thead');
-            const tbody = table.querySelector('tbody');
-            thead.innerHTML = '';
-            tbody.innerHTML = '';
-
-            if (!aoa || !aoa.length) return;
-
-            const maxCols = Math.max(...aoa.map(r => (r ? r.length : 0)));
-            const trHead = document.createElement('tr');
-            for (let c = 0; c < maxCols; c++) {
-                const th = document.createElement('th');
-                th.textContent = `Col ${c + 1}`;
-                trHead.appendChild(th);
-            }
-            thead.appendChild(trHead);
-
-            const limit = Math.min(aoa.length, 100);
-            for (let r = 0; r < limit; r++) {
-                const row = aoa[r] || [];
-                const tr = document.createElement('tr');
-                for (let c = 0; c < maxCols; c++) {
-                    const td = document.createElement('td');
-                    td.textContent = row[c] !== undefined && row[c] !== null ? String(row[c]) : '';
-                    tr.appendChild(td);
-                }
-                tbody.appendChild(tr);
-            }
-        }
-
-        // ---------------- Esportazione dati ----------------
-        function exportData(format) {
-            if (!cachedFilteredData || cachedFilteredData.length === 0) {
-                alert('Nessun dato da esportare.');
-                return;
-            }
+        // ---------------- Esportazione Dati ----------------
+        function exportData(type) {
+            if (!cachedFilteredData || cachedFilteredData.length === 0) return;
 
             const exportRows = cachedFilteredData.map(item => ({
-                'Pos.': item.pos ?? '',
+                'Posizione': item.pos ?? '',
                 'N. Albo': item.albo || '',
-                'Società': item.societa || '',
+                'Societa': item.societa || '',
                 'Fondo': item.fondo || '',
                 'Comparto': item.comparto || '',
                 'Categoria': item.categoria || '',
-                'Punteggio': item.score !== null ? item.score : '',
-                'ISC 2a': item.isc2 !== null ? item.isc2 : '',
-                'ISC 5a': item.isc5 !== null ? item.isc5 : '',
-                'ISC 10a': item.isc10 !== null ? item.isc10 : '',
-                'ISC 35a': item.isc35 !== null ? item.isc35 : '',
-                [`ISC stima ${yearsToRetirement}a`]: item.iscStima !== null ? item.iscStima : '',
-                'Rend 3a': item.r3 !== null ? item.r3 : '',
-                'Rend 5a': item.r5 !== null ? item.r5 : '',
-                'Rend 10a': item.r10 !== null ? item.r10 : '',
-                'Rend 20a': item.r20 !== null ? item.r20 : '',
-                [`Rend stima ${yearsToRetirement}a`]: item.rendStima !== null ? item.rendStima : ''
+                'Punteggio': item.score ?? '',
+                'ISC 2a': item.isc2 ?? '',
+                'ISC 5a': item.isc5 ?? '',
+                'ISC 10a': item.isc10 ?? '',
+                'ISC 35a': item.isc35 ?? '',
+                [`ISC Stima ${yearsToRetirement}a`]: item.iscStima ? item.iscStima.toFixed(2) : '',
+                'Rend 3a': item.r3 ?? '',
+                'Rend 5a': item.r5 ?? '',
+                'Rend 10a': item.r10 ?? '',
+                'Rend 20a': item.r20 ?? '',
+                [`Rend Stima ${yearsToRetirement}a`]: item.rendStima ? item.rendStima.toFixed(2) : ''
             }));
 
-            const ws = XLSX.utils.json_to_sheet(exportRows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "AperiCovip");
+            const worksheet = XLSX.utils.json_to_sheet(exportRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "AperiCovip Data");
 
-            const filename = `apericovip_export.${format}`;
-
-            if (format === 'xlsx') {
-                XLSX.writeFile(wb, filename);
-            } else if (format === 'csv') {
-                XLSX.writeFile(wb, filename, { bookType: 'csv' });
-            } else if (format === 'tsv') {
-                XLSX.writeFile(wb, filename, { bookType: 'csv', FS: '\t' });
+            if (type === 'xlsx') {
+                XLSX.writeFile(workbook, `apericovip_export_${yearsToRetirement}a.xlsx`);
+            } else if (type === 'csv') {
+                XLSX.writeFile(workbook, `apericovip_export_${yearsToRetirement}a.csv`, { bookType: 'csv' });
+            } else if (type === 'tsv') {
+                XLSX.writeFile(workbook, `apericovip_export_${yearsToRetirement}a.tsv`, { bookType: 'csv', FS: "\t" });
             }
         }
     </script>
