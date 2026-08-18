@@ -8,18 +8,6 @@
 Confronta i fondi pensione italiani usando dati ufficiali COVIP.
 
 Info + ultima versione: https://github.com/RaffaeleBianc0/aperiCovip
-
-TODO:
-- nel parsing dei rendimenti, colonna CATEGORIA COMPARTO, se trovi "OBB PURO" allora è GAR, se trovi "OBB MISTO" allora è OBB.
-- se il numero di oggetti rilevati dal file ISC è diverso da quello rilevato dal file RENDIMENTI, stampa un piccolo warning nello stesso box.
-- nel calcolo di "Rend stima", considera i rendimenti ufficiali con peso decrescente all'aumentare degli anni, perché i rendimenti recenti mi sembrano più significativi, esempio: 3a=40% 5a=30% 10a=20% 20a=10%
-- sposta il flag "solo comparti con entrambi i dati" e lo slider "peso ISC" entrambi nel box "esplora la classifica". Il box "Filtra e pondera" può essere a questo punto rimosso.
-- sposta il textbox con gli anni alla pensione nel box "esplora la classifica". Il box "Imposta i tuoi parametri" può essere a questo punto rimosso.
-- ri-etichetta correttamente i box residui dopo le rimozioni appena effettuate.
-- riporta tutte le colonne lette, ma rendi collassabili i gruppi "ISC ufficiali" e "Rend ufficiali" (e default=collapsed) così da semplificare la visualizzazione.
-- prima della colonna Fondo, riporta anche la colonna Società (valori letti dai file in input, dove lo stesso numero_albo corrisponde alla stessa Società).
-- nella colonna COMPARTO, non stampare i numeri tra parentesi letti dai file in input.
-- modifica il colore delle categorie così: AZN=rosso, OBB=blu, BIL=verde, GAR=marrone
 -->
 <!DOCTYPE html>
 <html lang="it">
@@ -148,6 +136,10 @@ TODO:
             min-width: 200px;
         }
 
+        .field.field-narrow {
+            min-width: auto;
+        }
+
         .field h3 {
             font-size: 0.8rem;
             color: var(--accent);
@@ -185,8 +177,24 @@ TODO:
             min-width: 140px;
         }
 
+        input#yearsToRetirement {
+            min-width: 60px;
+            max-width: 70px;
+            text-align: center;
+        }
+
         input[type="file"] {
             width: 100%;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            flex: 1;
         }
 
         .btn {
@@ -199,6 +207,13 @@ TODO:
             cursor: pointer;
             transition: background-color 0.2s;
             font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            height: 38px;
+            line-height: 1;
         }
 
         .btn:hover {
@@ -212,6 +227,11 @@ TODO:
 
         .btn-secondary:hover {
             background-color: #475569;
+        }
+
+        .btn-active {
+            background-color: var(--accent) !important;
+            color: var(--bg-color) !important;
         }
 
         .btn-sm {
@@ -325,6 +345,10 @@ TODO:
             display: none;
         }
 
+        table.official-hidden .official-col {
+            display: none;
+        }
+
         .collapsed-section {
             display: none;
         }
@@ -412,12 +436,12 @@ TODO:
             z-index: 5;
         }
 
-        th[data-col]:not([data-col="pos"]) {
+        th[data-col] {
             cursor: pointer;
             user-select: none;
         }
 
-        th[data-col]:not([data-col="pos"]):hover {
+        th[data-col]:hover {
             color: var(--text-main);
         }
 
@@ -538,23 +562,23 @@ TODO:
         }
 
         .type-azn {
+            background-color: #ef444420;
+            color: #f87171;
+        }
+
+        .type-bil {
+            background-color: #22c55e20;
+            color: #4ade80;
+        }
+
+        .type-obb {
             background-color: #3b82f620;
             color: #60a5fa;
         }
 
-        .type-bil {
-            background-color: #a855f720;
-            color: #c084fc;
-        }
-
-        .type-obb {
-            background-color: #f59e0b20;
-            color: #fbbf24;
-        }
-
         .type-gar {
-            background-color: #22c55e20;
-            color: #4ade80;
+            background-color: #8b451325;
+            color: #c9834f;
         }
 
         .type-other {
@@ -700,17 +724,13 @@ TODO:
     <div class="container">
         <div class="inner">
             <header>
-                <h1>🍸aperiCovip</h1>
+                <h1>aperiCovip🍸</h1>
+                <h4><strong>Comparatore fondi pensione basato su dati ufficiali COVIP</strong></h4><br />
                 <p class="description">
-                    <strong>Comparatore fondi pensione basato su dati ufficiali COVIP.</strong><br />
-                    Diventa il miglior conversatore sull'argomento più chiacchierato agli aperitivi: i fondi
-                    pensione.<br />
-                    Il punteggio di ogni fondo è ottenuto shakerando gli ingredienti fondamentali per un buon cocktail
-                    da dopo-lavoro: i <strong>costi</strong> e i <strong>rendimenti</strong>.<br />
-                    I dati mancanti in input vengono stimati con la <strong>media della stessa categoria</strong> di
-                    fondi per lo stesso dato (AZN, BIL, OBB, GAR).
-                    Per ogni fondo/comparto vengono calcolati ISC e rendimento attesi per la durata in anni impostata
-                    dall'utente, per estrapolazione dai dati ufficiali.<br />
+                    Diventa il miglior conversatore sull'argomento più chiacchierato agli aperitivi glamour: i fondi pensione.<br />
+                    Il punteggio di ogni fondo qui è calcolato shakerando gli ingredienti fondamentali per un buon cocktail da dopo-lavoro: i <strong>costi</strong> e i <strong>rendimenti</strong>.<br />
+                    È chiaro che i rendimenti passati non danno garanzie sui rendimenti futuri, quindi pesali meno rispetto ai costi, che invece sono certi.<br />
+                    Segui le istruzioni in sequenza qui sotto, è facile!
                 </p>
             </header>
 
@@ -721,7 +741,7 @@ TODO:
                     <p class="warning-text" style="margin-bottom: 0.8rem;"><strong>Importante:</strong> Questo strumento
                         è fornito a scopo puramente indicativo e informativo.</p>
                     <ul>
-                        <li>I dati visualizzati dipendono <strong>esclusivamente</strong> dai file scaricati o caricati.
+                        <li>I dati visualizzati dipendono <strong>esclusivamente</strong> dai file Excel caricati.
                             L'elaborazione potrebbe mostrare dati non corretti a seconda della struttura o del contenuto
                             del file di input.</li>
                         <li>Le imputazioni dei dati mancanti vengono effettuate utilizzando la <strong>media della
@@ -731,6 +751,8 @@ TODO:
                             ISC/Rendimento disponibili e sono puramente indicative.</li>
                         <li>Il punteggio calcolato è basato su una <strong>metodologia proprietaria</strong> (peso ISC +
                             Rendimento) e non rappresenta alcuna classificazione ufficiale COVIP.</li>
+                        <li>I dati mancanti in input (<em>esempio: il rendimento a 10 anni perché il fondo è nato 7 anni fa</em>) vengono stimati con la <strong>media della stessa categoria</strong> (AZN, BIL, OBB, GAR) di fondi, per lo stesso dato.</li>
+                        <li>Per ogni fondo/comparto vengono calcolati ISC e rendimento attesi per la durata in anni che imposti, per estrapolazione dai dati ufficiali.<br /></li>
                         <li>Si raccomanda di <strong>verificare sempre i dati ufficiali</strong> pubblicati da COVIP
                             prima di prendere qualsiasi decisione.</li>
                         <li>L'utilizzo di questo strumento è a <strong>esclusivo rischio dell'utente</strong>. Lo
@@ -745,19 +767,15 @@ TODO:
                 <div class="step-header">
                     <div class="step-num">1</div>
                     <div>
-                        <div class="step-title">Imposta i tuoi parametri</div>
-                        <div class="step-instructions">Indica quanti anni ti mancano alla pensione per stimare i valori
-                            futuri.</div>
+                        <div class="step-title">Scarica i dati ufficiali COVIP</div>
+                        <div class="step-instructions">Apri le pagine del sito COVIP dove scaricare manualmente i 2 file Excel, rispettivamente quello degli ISC (Indicatori Sintetici di Costo) e dei Rendimenti passati per tutti i fondi pensione disponibili in Italia, sia negoziali che aperti (scegli tu).
                     </div>
                 </div>
                 <div class="step-body">
-                    <div class="row">
-                        <div class="field">
-                            <h3>Anni alla pensione</h3>
-                            <input type="number" id="yearsToRetirement" min="1" max="60" value="19"
-                                oninput="onYearsChange()">
-                            <span class="sub-label">Usato per calcolare le colonne "stima" per estrapolazione.</span>
-                        </div>
+                    <div class="row" style="align-items:center;">
+                        <a href="https://www.covip.it/isc_dinamico/" target="_blank" class="btn">🔗 Apri pagina ISC COVIP</a>
+                        <a href="https://www.covip.it/per-gli-operatori/fondi-pensione/costi-e-rendimenti-dei-fondi-pensione/elenco-dei-rendimenti"
+                            target="_blank" class="btn">🔗 Apri pagina Rendimenti COVIP</a>
                     </div>
                 </div>
             </div>
@@ -766,27 +784,6 @@ TODO:
             <div class="step-block">
                 <div class="step-header">
                     <div class="step-num">2</div>
-                    <div>
-                        <div class="step-title">Scarica i dati ufficiali COVIP</div>
-                        <div class="step-instructions">Apri le pagine del sito COVIP dove scaricare manualmente i file
-                            di ISC e Rendimenti.</div>
-                    </div>
-                </div>
-                <div class="step-body">
-                    <div class="row" style="align-items:center;">
-                        <a href="https://www.covip.it/isc_dinamico/" target="_blank"><button class="btn">🔗 Apri pagina
-                                ISC COVIP</button></a>
-                        <a href="https://www.covip.it/per-gli-operatori/fondi-pensione/costi-e-rendimenti-dei-fondi-pensione/elenco-dei-rendimenti"
-                            target="_blank"><button class="btn">🔗 Apri pagina Rendimenti COVIP</button></a>
-                    </div>
-                    <!-- <span class="sub-label">Scarica i due file dalla pagina COVIP e caricali al passaggio successivo.</span>  -->
-                </div>
-            </div>
-
-            <!-- STEP 3 -->
-            <div class="step-block">
-                <div class="step-header">
-                    <div class="step-num">3</div>
                     <div>
                         <div class="step-title">Carica i file</div>
                         <div class="step-instructions">Carica qui i due file ISC e Rendimenti.</div>
@@ -797,7 +794,11 @@ TODO:
                         <div class="import-col">
                             <h3>Costi (ISC)</h3>
                             <label for="iscInput">Carica file ISC (.xlsx):</label>
-                            <input type="file" id="iscInput" accept=".xlsx" onchange="handleIscUpload(event)">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="iscInput" accept=".xlsx" onchange="handleIscUpload(event)">
+                                <button class="btn btn-secondary btn-sm" onclick="toggleRawIscVisibility()"
+                                    id="toggleRawIscButton" style="display:none; white-space:nowrap;">👁️ Mostra ISC grezzi</button>
+                            </div>
                             <div id="iscStatus" class="file-status"></div>
                             <div class="file-status" id="lastIscPath"
                                 style="font-size:0.8rem; color:var(--text-muted);"></div>
@@ -805,7 +806,11 @@ TODO:
                         <div class="import-col">
                             <h3>Rendimenti</h3>
                             <label for="rendInput">Carica file Rendimenti (.xlsx):</label>
-                            <input type="file" id="rendInput" accept=".xlsx" onchange="handleRendUpload(event)">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="rendInput" accept=".xlsx" onchange="handleRendUpload(event)">
+                                <button class="btn btn-secondary btn-sm" onclick="toggleRawRendVisibility()"
+                                    id="toggleRawRendButton" style="display:none; white-space:nowrap;">👁️ Mostra rendimenti grezzi</button>
+                            </div>
                             <div id="rendStatus" class="file-status"></div>
                             <div class="file-status" id="lastRendPath"
                                 style="font-size:0.8rem; color:var(--text-muted);"></div>
@@ -814,59 +819,45 @@ TODO:
                     <div class="banner info">
                         Entrambi i file XLSX sono necessari.
                     </div>
-                </div>
-            </div>
-
-            <!-- STEP 4 -->
-            <div id="stepRaw" class="step-block hidden-step">
-                <div class="step-header">
-                    <div class="step-num">4</div>
-                    <div>
-                        <div class="step-title">Visualizza i dati grezzi</div>
-                        <div class="step-instructions">I dati grezzi sono nascosti di default. Apri la tabella per
-                            verificare l’importazione.</div>
-                    </div>
-                </div>
-                <div class="step-body">
-                    <div class="row" style="align-items:center; gap: 0.75rem; flex-wrap: wrap;">
-                        <button class="btn btn-secondary btn-sm" onclick="toggleRawIscVisibility()"
-                            id="toggleRawIscButton">👁️ Mostra ISC grezzi</button>
-                        <button class="btn btn-secondary btn-sm" onclick="toggleRawRendVisibility()"
-                            id="toggleRawRendButton">👁️ Mostra rendimenti grezzi</button>
-                    </div>
-                    <div id="rawRendSection" class="collapsed-section" style="margin-top:1rem;">
-                        <div class="table-container">
-                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>Rendimenti</strong></div>
-                            <table id="rawRendTable">
-                                <thead></thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
                     <div id="rawIscSection" class="collapsed-section" style="margin-top:1rem;">
                         <div class="table-container">
-                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>ISC</strong></div>
+                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>ISC Grezzi</strong></div>
                             <table id="rawIscTable">
                                 <thead></thead>
                                 <tbody></tbody>
                             </table>
                         </div>
                     </div>
+                    <div id="rawRendSection" class="collapsed-section" style="margin-top:1rem;">
+                        <div class="table-container">
+                            <div class="status-bar" style="margin-bottom:0.5rem;"><strong>Rendimenti Grezzi</strong></div>
+                            <table id="rawRendTable">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- STEP 5 -->
-            <div id="stepFilter" class="step-block hidden-step">
+            <!-- STEP 3 -->
+            <div id="stepExplore" class="step-block hidden-step">
                 <div class="step-header">
-                    <div class="step-num">5</div>
+                    <div class="step-num">3</div>
                     <div>
-                        <div class="step-title">Filtra e pondera</div>
-                        <div class="step-instructions">Filtra i fondi con le caselle sopra le colonne della tabella, poi
-                            regola il peso tra ISC e Rendimento nel punteggio.</div>
+                        <div class="step-title">Esplora la classifica</div>
+                        <div class="step-instructions">Imposta gli anni alla pensione e i filtri, poi clicca sulle intestazioni delle colonne per ordinare (di nuovo per invertire).</div>
                     </div>
                 </div>
                 <div class="step-body">
-                    <div class="row" style="align-items:center;">
+                    <div class="row" style="align-items:flex-end;">
+                        <div class="field field-narrow">
+                            <h3>Anni alla pensione</h3>
+                            <input type="number" id="yearsToRetirement" min="1" max="60" value="19"
+                                oninput="onYearsChange()">
+                            <span class="sub-label">Usato per calcolare la colonna "ISC stima" per estrapolazione.</span>
+                        </div>
+
                         <div class="filter-group">
                             <label for="onlyMatched"
                                 title="Filtra solo i comparti che contengono sia dati ISC sia dati Rendimenti originali, escludendo quelli con informazioni parziali.">
@@ -878,7 +869,7 @@ TODO:
 
                         <div class="slider-group">
                             <label style="white-space:nowrap;">Peso ISC:</label>
-                            <input type="range" id="weightSlider" min="0" max="100" value="75" oninput="updateWeight()">
+                            <input type="range" id="weightSlider" min="0" max="100" step="5" value="75" oninput="updateWeight()">
                             <span class="weight-label" id="weightDisplay">75% ISC / 25% Rend</span>
                             <div class="btn-group">
                                 <button class="btn btn-secondary btn-sm" onclick="setWeight(50)">50% ISC</button>
@@ -887,21 +878,7 @@ TODO:
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- STEP 5 -->
-            <div id="stepExplore" class="step-block hidden-step">
-                <div class="step-header">
-                    <div class="step-num">6</div>
-                    <div>
-                        <div class="step-title">Esplora la classifica</div>
-                        <div class="step-instructions">Clicca sulle intestazioni delle colonne per ordinare (di nuovo
-                            per invertire). "(m)" indica un dato imputato con la media di categoria; i valori in
-                            grassetto sono le colonne stimate.</div>
-                    </div>
-                </div>
-                <div class="step-body">
                     <div class="legend">
                         <div><span class="imp">(m)</span> = dato mancante, sostituito con la media della stessa
                             categoria.</div>
@@ -909,10 +886,19 @@ TODO:
                             mancanti alla pensione, usata nel punteggio.</div>
                     </div>
 
+                    <div class="row" style="align-items:center;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleOfficialColumns()"
+                            id="toggleOfficialColumnsBtn">👁️ Mostra colonne ufficiali</button>
+                        <button class="btn btn-secondary btn-sm btn-active" onclick="toggleTop5()"
+                            id="toggleTop5Btn">📋 Mostra tutti i fondi</button>
+                    </div>
+
                     <div class="status-bar">
                         <span>Righe ISC caricate: <strong id="countIsc">0</strong> — Righe Rendimenti caricate: <strong
                                 id="countRend">0</strong> — Righe visualizzate: <strong
                                 id="countFiltered">0</strong></span>
+                        <span id="countMismatchWarning" style="color: var(--warning); display:none;">⚠️ Il numero di
+                            righe ISC e Rendimenti caricate non coincide.</span>
                     </div>
 
                     <div class="table-container" id="tableContainer">
@@ -922,20 +908,25 @@ TODO:
                         <table id="fundsDataTable" class="official-hidden">
                             <thead>
                                 <tr>
-                                    <th rowspan="2">Pos.</th>
-                                    <th rowspan="2">N. Albo</th>
-                                    <th rowspan="2">Fondo</th>
-                                    <th rowspan="2">Comparto</th>
-                                    <th rowspan="2">Categoria</th>
-                                    <th rowspan="2">Punteggio</th>
-                                    <th class="group-isc" colspan="2">ISC ufficiali</th>
-                                    <th id="thIscStima" data-col="iscStima" class="group-stima" rowspan="2">ISC stima
+                                    <th rowspan="2" data-col="pos">Pos.</th>
+                                    <th rowspan="2" data-col="albo">N. Albo</th>
+                                    <th rowspan="2" data-col="societa">Società</th>
+                                    <th rowspan="2" data-col="fondo">Fondo</th>
+                                    <th rowspan="2" data-col="comparto">Comparto</th>
+                                    <th rowspan="2" data-col="categoria">Categoria</th>
+                                    <th rowspan="2" data-col="score">Punteggio</th>
+                                    <th class="group-isc official-col" colspan="4">ISC ufficiali</th>
+                                    <th id="thIscStima" data-col="iscStima" class="group-stima" rowspan="2"
+                                        title="Valore stimato dell'Indicatore Sintetico di Costo (ISC) estrapolato o interpolato in base agli anni mancanti alla pensione impostati, utilizzando i dati ISC ufficiali COVIP (2a, 5a, 10a, 35a).">ISC stima
                                         19a</th>
-                                    <th class="group-rend" colspan="4">Rend ufficiali</th>
-                                    <th id="thRendStima" data-col="rendStima" class="group-stima" rowspan="2">Rend stima
+                                    <th class="group-rend official-col" colspan="4">Rend ufficiali</th>
+                                    <th id="thRendStima" data-col="rendStima" class="group-stima" rowspan="2"
+                                        title="Valore stimato del rendimento atteso calcolato come media pesata dei rendimenti storici ufficiali COVIP (3a, 5a, 10a, 20a), attribuendo maggior peso ai periodi più recenti.">Rend stima
                                         19a</th>
                                 </tr>
                                 <tr>
+                                    <th data-col="isc2" class="group-isc official-col">ISC 2a</th>
+                                    <th data-col="isc5" class="group-isc official-col">ISC 5a</th>
                                     <th data-col="isc10" class="group-isc official-col">ISC 10a</th>
                                     <th data-col="isc35" class="group-isc official-col">ISC 35a</th>
                                     <th data-col="r3" class="group-rend official-col">Rend 3a</th>
@@ -946,6 +937,8 @@ TODO:
                                 <tr class="filter-row">
                                     <th></th>
                                     <th><input type="text" id="filterAlbo" placeholder="Filtra..."
+                                            oninput="processAndRender()"></th>
+                                    <th><input type="text" id="filterSocieta" placeholder="Filtra..."
                                             oninput="processAndRender()"></th>
                                     <th><input type="text" id="filterFondo" placeholder="Filtra..."
                                             oninput="processAndRender()"></th>
@@ -960,7 +953,7 @@ TODO:
                                             <option value="GAR">GAR</option>
                                         </select>
                                     </th>
-                                    <th colspan="9"></th>
+                                    <th colspan="11"></th>
                                 </tr>
                             </thead>
                             <tbody id="fundsTable">
@@ -971,10 +964,10 @@ TODO:
                 </div>
             </div>
 
-            <!-- STEP 6 -->
+            <!-- STEP 4 -->
             <div id="stepExport" class="step-block hidden-step">
                 <div class="step-header">
-                    <div class="step-num">7</div>
+                    <div class="step-num">4</div>
                     <div>
                         <div class="step-title">Esporta i risultati</div>
                         <div class="step-instructions">Scarica la tabella filtrata e ordinata così com'è, nel formato
@@ -1004,6 +997,7 @@ TODO:
         let sortDirection = 'desc';
         let iscWeight = 75;
         let yearsToRetirement = 19;
+        let showOnlyTop5 = true;
 
         let mainIscData = [];
         let mainRendData = [];
@@ -1042,8 +1036,6 @@ TODO:
                     document.getElementById('weightSlider').value = iscWeight;
                     const rendWeight = 100 - iscWeight;
                     document.getElementById('weightDisplay').textContent = `${iscWeight}% ISC / ${rendWeight}% Rend`;
-                    document.getElementById('weightLabel').textContent = `${iscWeight}% ISC`;
-                    document.getElementById('weightLabelRend').textContent = `${rendWeight}% Rendimento`;
                 }
             } catch (err) { /* localStorage non disponibile o dati corrotti: ignora */ }
         }
@@ -1067,20 +1059,22 @@ TODO:
         // ---------------- Header maps ----------------
         const ISC_HEADER_MAP = {
             'n. albo': 'albo', 'n albo': 'albo', 'albo': 'albo',
-            'fondo': 'fondo',
-            'comparto': 'comparto',
-            'note': 'note',
+            'società': 'societa', 'societa': 'societa', 'societa\'': 'societa',
+            'denominazione societaria': 'societa', 'societa manager': 'societa',
+            'fondo': 'fondo', 'denominazione fondo': 'fondo',
+            'comparto': 'comparto', 'denominazione comparto': 'comparto',
             'categ. comparto': 'categoria', 'categ comparto': 'categoria',
             'categoria comparto': 'categoria', 'categoria': 'categoria',
+            'isc a 2 anni': 'isc2', 'isc 2 anni': 'isc2', 'isc2': 'isc2', 'isc 2': 'isc2',
+            'isc a 5 anni': 'isc5', 'isc 5 anni': 'isc5', 'isc5': 'isc5', 'isc 5': 'isc5',
             'isc a 10 anni': 'isc10', 'isc 10 anni': 'isc10', 'isc10': 'isc10', 'isc 10': 'isc10',
             'isc a 35 anni': 'isc35', 'isc 35 anni': 'isc35', 'isc35': 'isc35', 'isc 35': 'isc35'
         };
 
         const REND_LABEL_MAP = {
             'albo': ['n. albo', 'n albo', 'albo'],
-            'fondo': ['fondo'],
-            'comparto': ['comparto'],
-            'note': ['note'],
+            'fondo': ['fondo', 'denominazione fondo'],
+            'comparto': ['comparto', 'denominazione comparto'],
             'categoria': ['categoria', 'categ. comparto', 'categ comparto'],
             'r3': ['3 anni', 'ultimi 3 anni'],
             'r5': ['5 anni', 'ultimi 5 anni'],
@@ -1106,9 +1100,27 @@ TODO:
             if (!c) return '';
             if (c.startsWith('AZN') || c.includes('AZIONAR')) return 'AZN';
             if (c.startsWith('BIL') || c.includes('BILANC')) return 'BIL';
+            if (c.includes('OBB PURO') || c.includes('OBBLIGAZIONARIO PURO')) return 'GAR';
+            if (c.includes('OBB MISTO') || c.includes('OBBLIGAZIONARIO MISTO')) return 'OBB';
             if (c.includes('GAR')) return 'GAR';
             if (c.startsWith('OBB') || c.includes('OBBLIGAZ')) return 'OBB';
             return c;
+        }
+
+        function cleanSocietaName(val) {
+            let str = String(val || '').trim();
+            if (!str) return '';
+            const idx = str.indexOf("S.p.a.");
+            if (idx !== -1) {
+                str = str.substring(0, idx + "S.p.a.".length).trim();
+            }
+            return str;
+        }
+
+        function cleanCompartoName(val) {
+            let str = String(val || '').trim();
+            if (!str) return '';
+            return str.replace(/\s*\([^)]*\)/g, '').trim();
         }
 
         function findHeaderRow(aoa, headerMap, maxRows = 30) {
@@ -1157,15 +1169,19 @@ TODO:
 
                 const get = key => colIndex[key] !== undefined ? row[colIndex[key]] : '';
                 const fondo = String(get('fondo') || '').trim();
-                const comparto = String(get('comparto') || '').trim();
+                const comparto = cleanCompartoName(get('comparto'));
                 if (!fondo || !comparto) continue;
+
+                const rawSocieta = String(get('societa') || '').trim();
 
                 out.push({
                     albo: normalizeMissingValue(get('albo')),
+                    societaIsc: cleanSocietaName(rawSocieta),
                     fondo,
                     comparto,
-                    note: String(get('note') || '').trim(),
                     categoria: normalizeCategoria(get('categoria')),
+                    isc2: parseNumValue(get('isc2')),
+                    isc5: parseNumValue(get('isc5')),
                     isc10: parseNumValue(get('isc10')),
                     isc35: parseNumValue(get('isc35'))
                 });
@@ -1181,7 +1197,6 @@ TODO:
             const colFor = {};
             const rowFor = {};
 
-            // Mappatura delle colonne in base alle intestazioni trovate
             for (let r = 0; r < scanRows; r++) {
                 const row = aoa[r] || [];
                 for (let c = 0; c < row.length; c++) {
@@ -1215,14 +1230,9 @@ TODO:
 
                 const get = (field) => (colFor[field] !== undefined ? row[colFor[field]] : '');
 
-                // Estrazione valore comparto
-                let comparto = String(get('comparto') || '').trim();
+                let comparto = cleanCompartoName(get('comparto'));
                 if (!comparto) continue;
 
-                // Pulizia del nome comparto: rimozione di numeri/codici tra parentesi (es. "COMPARTO (123)" -> "COMPARTO")
-                comparto = comparto.replace(/\s*\(\d+\)/g, '').trim();
-
-                // Forward fill per N. ALBO e FONDO
                 let alboVal = normalizeMissingValue(get('albo'));
                 let fondoVal = normalizeMissingValue(get('fondo'));
 
@@ -1236,7 +1246,6 @@ TODO:
                     albo: alboVal,
                     fondo: fondoVal,
                     comparto: comparto,
-                    note: String(get('note') || '').trim(),
                     categoria: normalizeCategoria(get('categoria')),
                     r3: parseNumValue(get('r3')),
                     r5: parseNumValue(get('r5')),
@@ -1252,6 +1261,93 @@ TODO:
             const str = String(value || '').trim();
             if (!str || str === '-' || str.toLowerCase() === 'n.d.' || str.toLowerCase() === 'nd') return '';
             return str;
+        }
+
+        // ---------------- File Handlers ----------------
+        function handleIscUpload(event) {
+            const file = event.target.files[0];
+            const statusEl = document.getElementById('iscStatus');
+            const pathEl = document.getElementById('lastIscPath');
+            const btnEl = document.getElementById('toggleRawIscButton');
+            if (!file) return;
+
+            statusEl.textContent = 'Caricamento in corso...';
+            statusEl.className = 'file-status';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    rawIscData = createRawRowsFromAOA(aoa);
+                    mainIscData = iscRowsFromAOA(aoa);
+
+                    if (mainIscData.length > 0) {
+                        statusEl.textContent = `✓ Caricate ${mainIscData.length} righe ISC`;
+                        statusEl.className = 'file-status ok';
+                        pathEl.textContent = file.name;
+                        btnEl.style.display = 'inline-flex';
+                    } else {
+                        statusEl.textContent = '❌ Nessun dato valido trovato nel file ISC';
+                        statusEl.className = 'file-status error';
+                        btnEl.style.display = 'none';
+                    }
+                    refreshRawView();
+                    processAndRender();
+                } catch (err) {
+                    statusEl.textContent = '❌ Errore nella lettura del file ISC';
+                    statusEl.className = 'file-status error';
+                    btnEl.style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleRendUpload(event) {
+            const file = event.target.files[0];
+            const statusEl = document.getElementById('rendStatus');
+            const pathEl = document.getElementById('lastRendPath');
+            const btnEl = document.getElementById('toggleRawRendButton');
+            if (!file) return;
+
+            statusEl.textContent = 'Caricamento in corso...';
+            statusEl.className = 'file-status';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    rawRendData = createRawRowsFromAOA(aoa);
+                    mainRendData = rendRowsFromAOA(aoa);
+
+                    if (mainRendData.length > 0) {
+                        statusEl.textContent = `✓ Caricate ${mainRendData.length} righe Rendimenti`;
+                        statusEl.className = 'file-status ok';
+                        pathEl.textContent = file.name;
+                        btnEl.style.display = 'inline-flex';
+                    } else {
+                        statusEl.textContent = '❌ Nessun dato valido trovato nel file Rendimenti';
+                        statusEl.className = 'file-status error';
+                        btnEl.style.display = 'none';
+                    }
+                    refreshRawView();
+                    processAndRender();
+                } catch (err) {
+                    statusEl.textContent = '❌ Errore nella lettura del file Rendimenti';
+                    statusEl.className = 'file-status error';
+                    btnEl.style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         // ---------------- Merge ISC + Rendimenti ----------------
@@ -1282,11 +1378,13 @@ TODO:
                 const ef = splitEmittenteFondo(d.fondo);
                 const item = {
                     albo: d.albo,
+                    societaIsc: d.societaIsc,
                     emittente: ef.emittente,
                     fondo: ef.fondo,
                     comparto: d.comparto,
-                    note: d.note,
                     categoria: d.categoria,
+                    isc2: d.isc2,
+                    isc5: d.isc5,
                     isc10: d.isc10,
                     isc35: d.isc35,
                     r3: null, r5: null, r10: null, r20: null,
@@ -1310,19 +1408,18 @@ TODO:
                     const row = map.get(matchedKey);
                     row.r3 = d.r3; row.r5 = d.r5; row.r10 = d.r10; row.r20 = d.r20;
                     if (!row.categoria) row.categoria = d.categoria;
-                    if (!row.note) row.note = d.note;
                     if (!row.albo) row.albo = d.albo;
                     row._hasRend = true;
                 } else {
                     const ef = splitEmittenteFondo(d.fondo);
                     const item = {
                         albo: d.albo,
+                        societaIsc: '',
                         emittente: ef.emittente,
                         fondo: ef.fondo,
                         comparto: d.comparto,
-                        note: d.note,
                         categoria: d.categoria,
-                        isc10: null, isc35: null,
+                        isc2: null, isc5: null, isc10: null, isc35: null,
                         r3: d.r3, r5: d.r5, r10: d.r10, r20: d.r20,
                         _hasIsc: false,
                         _hasRend: true
@@ -1334,9 +1431,20 @@ TODO:
             return Array.from(map.values());
         }
 
+        // ---------------- Società ----------------
+        function assignSocieta(data) {
+            data.forEach(item => {
+                if (item.societaIsc) {
+                    item.societa = item.societaIsc;
+                } else {
+                    item.societa = item.emittente || '';
+                }
+            });
+        }
+
         // ---------------- Imputazione medie per categoria ----------------
         function computeAveragesAndImpute(data) {
-            const numericCols = ['isc10', 'isc35', 'r3', 'r5', 'r10', 'r20'];
+            const numericCols = ['isc2', 'isc5', 'isc10', 'isc35', 'r3', 'r5', 'r10', 'r20'];
             const categories = ['AZN', 'BIL', 'OBB', 'GAR'];
             const averages = {};
 
@@ -1368,7 +1476,7 @@ TODO:
         }
 
         function bestIsc(item) {
-            const order = [['isc35', '35a'], ['isc10', '10a']];
+            const order = [['isc35', '35a'], ['isc10', '10a'], ['isc5', '5a'], ['isc2', '2a']];
             for (const [k, label] of order) {
                 if (item[k] !== null && item[k] !== undefined && !isNaN(item[k])) {
                     return { key: k, value: item[k], label, isImputed: !!item._imputed[k] };
@@ -1414,12 +1522,16 @@ TODO:
         }
 
         function computeStimaColumns(item, years) {
-            const iscPoints = [[10, item.isc10], [35, item.isc35]];
+            const iscPoints = [[2, item.isc2], [5, item.isc5], [10, item.isc10], [35, item.isc35]];
             let iscStima = interpolateOrExtrapolate(iscPoints, years);
             if (iscStima !== null) iscStima = Math.max(0, iscStima);
 
-            const rendPoints = [[3, item.r3], [5, item.r5], [10, item.r10], [20, item.r20]];
-            let rendStima = interpolateOrExtrapolate(rendPoints, years);
+            const REND_WEIGHTS = [[item.r3, 0.40], [item.r5, 0.30], [item.r10, 0.20], [item.r20, 0.10]];
+            let sumW = 0, sumWV = 0;
+            REND_WEIGHTS.forEach(([v, w]) => {
+                if (v !== null && v !== undefined && !isNaN(v)) { sumWV += v * w; sumW += w; }
+            });
+            let rendStima = sumW > 0 ? sumWV / sumW : null;
             if (rendStima !== null) rendStima = Math.max(0, rendStima);
 
             item.iscStima = iscStima;
@@ -1448,7 +1560,7 @@ TODO:
             const weightIsc = iscWeight / 100;
             const weightRend = 1 - weightIsc;
 
-            return enriched.map(item => {
+            const scoredData = enriched.map(item => {
                 let scoreIsc = null; let scoreRend = null;
                 const iscValue = item.iscStima;
                 const rendValue = item.rendStima;
@@ -1468,6 +1580,14 @@ TODO:
                 item.score = finalScore !== null ? Math.round(finalScore * 10) / 10 : null;
                 return item;
             });
+
+            // Assegna la posizione naturale in base al punteggio decrescente
+            const sortedByScore = [...scoredData].sort((a, b) => (b.score ?? -999) - (a.score ?? -999));
+            sortedByScore.forEach((item, index) => {
+                item.pos = index + 1;
+            });
+
+            return scoredData;
         }
 
         function getScoreColorStyle(score) {
@@ -1478,49 +1598,84 @@ TODO:
         }
 
         // ---------------- Render tabella ----------------
+        function updateTableHeaderArrows() {
+            document.querySelectorAll('th[data-col]').forEach(th => {
+                const col = th.dataset.col;
+                let text = th.childNodes[0] ? th.childNodes[0].nodeValue.trim() : th.textContent.trim();
+                text = text.replace(/\s+[▲▼]$/, '');
+                
+                if (col === sortColumn) {
+                    const arrow = sortDirection === 'asc' ? ' ▲' : ' ▼';
+                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) {
+                        th.childNodes[0].nodeValue = text + arrow;
+                    } else {
+                        th.textContent = text + arrow;
+                    }
+                } else {
+                    if (th.childNodes[0] && th.childNodes[0].nodeType === Node.TEXT_NODE) {
+                        th.childNodes[0].nodeValue = text;
+                    } else {
+                        th.textContent = text;
+                    }
+                }
+            });
+        }
+
         function renderTable(data) {
+            updateTableHeaderArrows();
             const tbody = document.getElementById('fundsTable');
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="14" style="text-align:center; padding:2rem; color:var(--text-muted);">Nessun dato disponibile. Scarica o carica i file ISC e Rendimenti per iniziare.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:2rem; color:var(--text-muted);">Nessun dato disponibile. Scarica o carica i file ISC e Rendimenti per iniziare.</td></tr>';
                 cachedFilteredData = [];
                 updateScrollProgress();
                 return;
             }
 
-            const sorted = [...data];
-            if (sortColumn !== 'pos') {
-                if (sortColumn === 'score') {
-                    sorted.sort((a, b) => { const valA = a.score ?? -999; const valB = b.score ?? -999; return sortDirection === 'asc' ? valA - valB : valB - valA; });
+            let sorted = [...data];
+            sorted.sort((a, b) => {
+                let valA, valB;
+                if (sortColumn === 'pos') {
+                    valA = a.pos ?? 999999; valB = b.pos ?? 999999;
+                    return sortDirection === 'asc' ? valA - valB : valB - valA;
+                } else if (sortColumn === 'score') {
+                    valA = a.score ?? -999; valB = b.score ?? -999;
+                    return sortDirection === 'asc' ? valA - valB : valB - valA;
                 } else if (sortColumn === 'albo') {
-                    sorted.sort((a, b) => { const valA = String(a.albo || ''); const valB = String(b.albo || ''); return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA); });
+                    valA = String(a.albo || ''); valB = String(b.albo || '');
+                    return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 } else {
-                    sorted.sort((a, b) => {
-                        let valA = a[sortColumn] ?? ''; let valB = b[sortColumn] ?? '';
-                        if (typeof valA === 'number' && typeof valB === 'number') return sortDirection === 'asc' ? valA - valB : valB - valA;
-                        valA = String(valA); valB = String(valB);
-                        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    });
+                    valA = a[sortColumn] ?? ''; valB = b[sortColumn] ?? '';
+                    if (typeof valA === 'number' && typeof valB === 'number') return sortDirection === 'asc' ? valA - valB : valB - valA;
+                    valA = String(valA); valB = String(valB);
+                    return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 }
+            });
+
+            cachedFilteredData = [...sorted];
+
+            let displayData = sorted;
+            if (showOnlyTop5) {
+                displayData = sorted.slice(0, 5);
             }
 
-            sorted.forEach((item, idx) => {
+            displayData.forEach((item) => {
                 const tr = document.createElement('tr');
 
+                const scoreFormatted = item.score !== null ? item.score.toFixed(1) : '0.0';
                 const scoreHtml = item.score !== null
-                    ? `<span class="score-badge" style="${getScoreColorStyle(item.score)}" title="ISC stima ${yearsToRetirement}a e Rend stima ${yearsToRetirement}a">${item.score}</span>`
-                    : '<span style="color:var(--text-muted);">-</span>';
+                    ? `<span class="score-badge" style="${getScoreColorStyle(item.score)}" title="ISC stima ${yearsToRetirement}a e Rend stima ${yearsToRetirement}a">${scoreFormatted}</span>`
+                    : '<span style="color:var(--text-muted);">0.0</span>';
 
                 const catClass = 'type-' + (item.categoria ? item.categoria.toLowerCase() : 'other');
 
                 const numCell = (val, key) => {
-                    if (val === null || val === undefined) return '<td>-</td>';
+                    if (val === null || val === undefined) return '<td class="official-col">-</td>';
                     const isImp = item._imputed && item._imputed[key];
-                    const classes = [];
+                    const classes = ['official-col'];
                     if (isImp) classes.push('imputed-val');
-                    if (['isc10', 'isc35', 'r3', 'r5', 'r10', 'r20'].includes(key)) classes.push('official-col');
-                    const clsAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
+                    const clsAttr = ` class="${classes.join(' ')}"`;
                     return `<td${clsAttr}>${val.toFixed(2)}%</td>`;
                 };
 
@@ -1530,25 +1685,27 @@ TODO:
                 };
 
                 tr.innerHTML = `
-                <td class="pos-pill"><span>${idx + 1}</span></td>
+                <td class="pos-pill"><span>${item.pos ?? '-'}</span></td>
                 <td>${item.albo || '-'}</td>
+                <td class="fondo-cell">${escapeHtml(item.societa || '-')}</td>
                 <td class="fondo-cell">${escapeHtml(item.fondo || '-')}</td>
-                <td class="fondo-cell">${escapeHtml(item.comparto || '-')} ${item.note ? `<span class="note-tag">${escapeHtml(item.note)}</span>` : ''}</td>
+                <td class="fondo-cell">${escapeHtml(item.comparto || '-')}</td>
                 <td><span class="type-tag ${catClass}">${item.categoria || 'ALTRO'}</span></td>
                 <td>${scoreHtml}</td>
-                ${numCell(item.isc10, 'isc10', true)}
-                ${numCell(item.isc35, 'isc35', true)}
+                ${numCell(item.isc2, 'isc2')}
+                ${numCell(item.isc5, 'isc5')}
+                ${numCell(item.isc10, 'isc10')}
+                ${numCell(item.isc35, 'isc35')}
                 ${stimaCell(item.iscStima)}
-                ${numCell(item.r3, 'r3', false)}
-                ${numCell(item.r5, 'r5', false)}
-                ${numCell(item.r10, 'r10', false)}
-                ${numCell(item.r20, 'r20', false)}
+                ${numCell(item.r3, 'r3')}
+                ${numCell(item.r5, 'r5')}
+                ${numCell(item.r10, 'r10')}
+                ${numCell(item.r20, 'r20')}
                 ${stimaCell(item.rendStima)}
             `;
                 tbody.appendChild(tr);
             });
 
-            cachedFilteredData = sorted;
             updateScrollProgress();
         }
 
@@ -1570,6 +1727,7 @@ TODO:
         document.addEventListener('DOMContentLoaded', function () {
             const container = document.getElementById('tableContainer');
             if (container) { container.addEventListener('scroll', updateScrollProgress); window.addEventListener('resize', updateScrollProgress); }
+            loadPrefs();
         });
 
         // ---------------- Parametri (anni, tipo fondo) ----------------
@@ -1585,30 +1743,40 @@ TODO:
         // ---------------- Processing & filtri ----------------
         function processAndRender() {
             const merged = mergeDatasets(mainIscData, mainRendData);
-            const scored = calculateScores(merged);
+            assignSocieta(merged);
 
             const onlyMatched = document.getElementById('onlyMatched').checked;
             const filterAlbo = (document.getElementById('filterAlbo')?.value || '').toLowerCase().trim();
+            const filterSocieta = (document.getElementById('filterSocieta')?.value || '').toLowerCase().trim();
             const filterFondo = (document.getElementById('filterFondo')?.value || '').toLowerCase().trim();
             const filterComparto = (document.getElementById('filterComparto')?.value || '').toLowerCase().trim();
             const filterCatCol = document.getElementById('filterCategoriaCol').value;
 
-            const filtered = scored.filter(item => {
+            const filteredData = merged.filter(item => {
                 if (onlyMatched && (!item._hasIsc || !item._hasRend)) {
                     return false;
                 }
                 if (filterAlbo && !String(item.albo || '').toLowerCase().includes(filterAlbo)) return false;
+                if (filterSocieta && !String(item.societa || '').toLowerCase().includes(filterSocieta)) return false;
                 if (filterFondo && !String(item.fondo || '').toLowerCase().includes(filterFondo)) return false;
                 if (filterComparto && !String(item.comparto || '').toLowerCase().includes(filterComparto)) return false;
                 if (filterCatCol !== 'ALL' && item.categoria !== filterCatCol) return false;
                 return true;
             });
 
+            const scored = calculateScores(filteredData);
+
             document.getElementById('countIsc').innerText = mainIscData.length;
             document.getElementById('countRend').innerText = mainRendData.length;
-            document.getElementById('countFiltered').innerText = filtered.length;
+            document.getElementById('countFiltered').innerText = showOnlyTop5 ? Math.min(5, scored.length) : scored.length;
 
-            renderTable(filtered);
+            const mismatchEl = document.getElementById('countMismatchWarning');
+            if (mismatchEl) {
+                const bothLoaded = mainIscData.length > 0 && mainRendData.length > 0;
+                mismatchEl.style.display = (bothLoaded && mainIscData.length !== mainRendData.length) ? 'inline' : 'none';
+            }
+
+            renderTable(scored);
             updateStepVisibility();
         }
 
@@ -1618,158 +1786,107 @@ TODO:
             iscWeight = parseInt(slider.value);
             const rendWeight = 100 - iscWeight;
             document.getElementById('weightDisplay').textContent = `${iscWeight}% ISC / ${rendWeight}% Rend`;
-            document.getElementById('weightLabel').textContent = `${iscWeight}% ISC`;
-            document.getElementById('weightLabelRend').textContent = `${rendWeight}% Rendimento`;
             savePrefs();
             processAndRender();
         }
 
         function setWeight(value) { document.getElementById('weightSlider').value = value; updateWeight(); }
 
+        // ---------------- Top 5 Filter ----------------
+        function toggleTop5() {
+            showOnlyTop5 = !showOnlyTop5;
+            const btn = document.getElementById('toggleTop5Btn');
+            if (showOnlyTop5) {
+                btn.textContent = '📋 Mostra tutti i fondi';
+                btn.classList.add('btn-active');
+            } else {
+                btn.textContent = '⭐ Mostra solo i primi 5 fondi';
+                btn.classList.remove('btn-active');
+            }
+            processAndRender();
+        }
+
         // ---------------- Ordinamento ----------------
         document.addEventListener('click', function (e) {
             const th = e.target.closest('th[data-col]');
             if (!th) return;
             const col = th.dataset.col;
-            if (col === 'pos') return;
             if (sortColumn === col) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
             else { sortColumn = col; sortDirection = 'desc'; }
             processAndRender();
         });
 
-        // ---------------- Esportazione ----------------
-        function getFormattedFilename(extension) {
-            const now = new Date();
-            const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
-            const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0') + String(now.getSeconds()).padStart(2, '0');
-            const rendWeight = 100 - iscWeight;
-            return `apericovip-${dateStr}-${timeStr}-${iscWeight}isc+${rendWeight}rend.${extension}`;
-        }
+        // ---------------- Gestione Step & Visibilità ----------------
+        function updateStepVisibility() {
+            const bothLoaded = mainIscData.length > 0 && mainRendData.length > 0;
+            const stepExplore = document.getElementById('stepExplore');
+            const stepExport = document.getElementById('stepExport');
 
-        function exportData(format) {
-            if (!cachedFilteredData || cachedFilteredData.length === 0) { alert('Nessun dato da esportare.'); return; }
-
-            const headers = ['Pos.', 'N. Albo', 'Fondo', 'Comparto', 'Categoria', 'Punteggio',
-                'ISC 10a', 'ISC 35a', `ISC stima ${yearsToRetirement}a`,
-                'Rend 3a', 'Rend 5a', 'Rend 10a', 'Rend 20a', `Rend stima ${yearsToRetirement}a`];
-
-            const rows = cachedFilteredData.map((item, idx) => [
-                idx + 1, item.albo || '', item.fondo || '', item.comparto || '', item.categoria || '',
-                item.score !== null ? item.score : '',
-                item.isc10 !== null ? item.isc10 : '', item.isc35 !== null ? item.isc35 : '',
-                item.iscStima !== null && item.iscStima !== undefined ? item.iscStima : '',
-                item.r3 !== null ? item.r3 : '', item.r5 !== null ? item.r5 : '', item.r10 !== null ? item.r10 : '', item.r20 !== null ? item.r20 : '',
-                item.rendStima !== null && item.rendStima !== undefined ? item.rendStima : ''
-            ]);
-
-            const data = [headers, ...rows];
-
-            if (format === 'xlsx') {
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, 'Fondi');
-                XLSX.writeFile(wb, getFormattedFilename('xlsx'));
-            } else if (format === 'csv') {
-                const csv = data.map(row => row.join(',')).join('\n');
-                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob); link.download = getFormattedFilename('csv'); link.click(); URL.revokeObjectURL(link.href);
-            } else if (format === 'tsv') {
-                const tsv = data.map(row => row.join('\t')).join('\n');
-                const blob = new Blob(['\uFEFF' + tsv], { type: 'text/tab-separated-values;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob); link.download = getFormattedFilename('tsv'); link.click(); URL.revokeObjectURL(link.href);
+            if (bothLoaded) {
+                stepExplore.classList.remove('hidden-step');
+                stepExport.classList.remove('hidden-step');
+            } else {
+                stepExplore.classList.add('hidden-step');
+                stepExport.classList.add('hidden-step');
             }
         }
 
-        // ---------------- Upload manuale ----------------
-        function handleIscUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (evt) {
-                try {
-                    const workbook = XLSX.read(evt.target.result, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                    const parsed = iscRowsFromAOA(aoa);
-                    const raw = createRawRowsFromAOA(aoa);
-
-                    if (parsed.length > 0) {
-                        mainIscData = parsed;
-                        rawIscData = raw;
-                        showStatus('iscStatus', `Caricate ${parsed.length} righe da ${file.name}`, 'ok');
-                        processAndRender();
-                        refreshRawView();
-                    } else {
-                        showStatus('iscStatus', 'File XLSX non riconosciuto o nessuna riga valida trovata.', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showStatus('iscStatus', 'Errore durante la lettura del file: ' + err.message, 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
+        function toggleOfficialColumns() {
+            const table = document.getElementById('fundsDataTable');
+            const btn = document.getElementById('toggleOfficialColumnsBtn');
+            if (table.classList.contains('official-hidden')) {
+                table.classList.remove('official-hidden');
+                btn.textContent = '🙈 Nascondi colonne ufficiali';
+            } else {
+                table.classList.add('official-hidden');
+                btn.textContent = '👁️ Mostra colonne ufficiali';
+            }
+            updateScrollProgress();
         }
 
-        function handleRendUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        function toggleRawIscVisibility() {
+            const sectionIsc = document.getElementById('rawIscSection');
+            const btnIsc = document.getElementById('toggleRawIscButton');
+            const sectionRend = document.getElementById('rawRendSection');
+            const btnRend = document.getElementById('toggleRawRendButton');
 
-            const reader = new FileReader();
-            reader.onload = function (evt) {
-                try {
-                    const workbook = XLSX.read(evt.target.result, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-                    const parsed = rendRowsFromAOA(aoa);
-                    const raw = createRawRowsFromAOA(aoa);
+            // Se stiamo per aprire ISC, chiudiamo Rend
+            if (!sectionIsc.classList.contains('visible')) {
+                sectionRend.classList.remove('visible');
+                btnRend.textContent = '👁️ Mostra rendimenti grezzi';
+            }
 
-                    if (parsed.length > 0) {
-                        mainRendData = parsed;
-                        rawRendData = raw;
-                        showStatus('rendStatus', `Caricate ${parsed.length} righe da ${file.name}`, 'ok');
-                        processAndRender();
-                        refreshRawView();
-                    } else {
-                        showStatus('rendStatus', 'File XLSX non riconosciuto o nessuna riga valida trovata.', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showStatus('rendStatus', 'Errore durante la lettura del file: ' + err.message, 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            sectionIsc.classList.toggle('visible');
+            btnIsc.textContent = sectionIsc.classList.contains('visible') ? '🙈 Nascondi ISC grezzi' : '👁️ Mostra ISC grezzi';
         }
 
-        function showStatus(elemId, msg, type) {
-            const el = document.getElementById(elemId);
-            el.innerText = msg; el.className = 'file-status ' + type;
+        function toggleRawRendVisibility() {
+            const sectionRend = document.getElementById('rawRendSection');
+            const btnRend = document.getElementById('toggleRawRendButton');
+            const sectionIsc = document.getElementById('rawIscSection');
+            const btnIsc = document.getElementById('toggleRawIscButton');
+
+            // Se stiamo per aprire Rend, chiudiamo ISC
+            if (!sectionRend.classList.contains('visible')) {
+                sectionIsc.classList.remove('visible');
+                btnIsc.textContent = '👁️ Mostra ISC grezzi';
+            }
+
+            sectionRend.classList.toggle('visible');
+            btnRend.textContent = sectionRend.classList.contains('visible') ? '🙈 Nascondi rendimenti grezzi' : '👁️ Mostra rendimenti grezzi';
         }
 
-        // Converte l'array di righe XLSX in oggetti per la visualizzazione dei dati grezzi.
+        function refreshRawView() {
+            renderRawTable(rawIscData, 'rawIscTable');
+            renderRawTable(rawRendData, 'rawRendTable');
+        }
+
         function createRawRowsFromAOA(aoa) {
-            if (!Array.isArray(aoa) || aoa.length < 2) return [];
-
-            const headers = (aoa[0] || []).map((h, i) => {
-                const text = String(h == null ? '' : h).trim();
-                return text || `col${i + 1}`;
-            });
-
-            return aoa.slice(1)
-                .filter(row => Array.isArray(row) && row.some(c => c !== '' && c !== null && c !== undefined))
-                .map(row => {
-                    const obj = {};
-                    headers.forEach((header, i) => {
-                        obj[header] = row[i] !== undefined && row[i] !== null ? row[i] : '';
-                    });
-                    return obj;
-                });
+            if (!aoa || !aoa.length) return [];
+            return aoa;
         }
 
-        // ---------------- Visualizzazione file grezzi / dati parsati ----------------
-        function renderRawTable(data, tableId) {
+        function renderRawTable(aoa, tableId) {
             const table = document.getElementById(tableId);
             if (!table) return;
             const thead = table.querySelector('thead');
@@ -1777,102 +1894,72 @@ TODO:
             thead.innerHTML = '';
             tbody.innerHTML = '';
 
-            if (!data || data.length === 0) {
-                const row = document.createElement('tr');
-                const cell = document.createElement('td');
-                cell.colSpan = 10;
-                cell.style.textAlign = 'center';
-                cell.style.padding = '1rem';
-                cell.style.color = 'var(--text-muted)';
-                cell.textContent = 'Nessun dato caricato.';
-                row.appendChild(cell);
-                tbody.appendChild(row);
+            if (!aoa || !aoa.length) return;
+
+            const maxCols = Math.max(...aoa.map(r => (r ? r.length : 0)));
+            const trHead = document.createElement('tr');
+            for (let c = 0; c < maxCols; c++) {
+                const th = document.createElement('th');
+                th.textContent = `Col ${c + 1}`;
+                trHead.appendChild(th);
+            }
+            thead.appendChild(trHead);
+
+            const limit = Math.min(aoa.length, 100);
+            for (let r = 0; r < limit; r++) {
+                const row = aoa[r] || [];
+                const tr = document.createElement('tr');
+                for (let c = 0; c < maxCols; c++) {
+                    const td = document.createElement('td');
+                    td.textContent = row[c] !== undefined && row[c] !== null ? String(row[c]) : '';
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+        }
+
+        // ---------------- Esportazione dati ----------------
+        function exportData(format) {
+            if (!cachedFilteredData || cachedFilteredData.length === 0) {
+                alert('Nessun dato da esportare.');
                 return;
             }
 
-            const allKeysRaw = Array.from(data.reduce((keys, row) => {
-                Object.keys(row).forEach(k => keys.add(k));
-                return keys;
-            }, new Set(Object.keys(data[0]))));
+            const exportRows = cachedFilteredData.map(item => ({
+                'Pos.': item.pos ?? '',
+                'N. Albo': item.albo || '',
+                'Società': item.societa || '',
+                'Fondo': item.fondo || '',
+                'Comparto': item.comparto || '',
+                'Categoria': item.categoria || '',
+                'Punteggio': item.score !== null ? item.score : '',
+                'ISC 2a': item.isc2 !== null ? item.isc2 : '',
+                'ISC 5a': item.isc5 !== null ? item.isc5 : '',
+                'ISC 10a': item.isc10 !== null ? item.isc10 : '',
+                'ISC 35a': item.isc35 !== null ? item.isc35 : '',
+                [`ISC stima ${yearsToRetirement}a`]: item.iscStima !== null ? item.iscStima : '',
+                'Rend 3a': item.r3 !== null ? item.r3 : '',
+                'Rend 5a': item.r5 !== null ? item.r5 : '',
+                'Rend 10a': item.r10 !== null ? item.r10 : '',
+                'Rend 20a': item.r20 !== null ? item.r20 : '',
+                [`Rend stima ${yearsToRetirement}a`]: item.rendStima !== null ? item.rendStima : ''
+            }));
 
-            // Nasconde le colonne che, su tutte le righe, sono vuote, null/undefined o "-"
-            const isBlankValue = (v) => v === null || v === undefined || String(v).trim() === '' || String(v).trim() === '-';
-            const allKeys = allKeysRaw.filter(key => data.some(row => !isBlankValue(row[key])));
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "AperiCovip");
 
-            const headerRow = document.createElement('tr');
-            allKeys.forEach(key => {
-                const th = document.createElement('th');
-                th.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
+            const filename = `apericovip_export.${format}`;
 
-            data.forEach(rowData => {
-                const tr = document.createElement('tr');
-                allKeys.forEach(key => {
-                    const td = document.createElement('td');
-                    let value = rowData[key];
-                    if (value === null || value === undefined || value === '') value = '-';
-                    else if (typeof value === 'number') {
-                        if (key.toLowerCase() === 'albo' || Number.isInteger(value)) value = value.toString();
-                        else value = value.toFixed(2);
-                    }
-                    td.textContent = value;
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
+            if (format === 'xlsx') {
+                XLSX.writeFile(wb, filename);
+            } else if (format === 'csv') {
+                XLSX.writeFile(wb, filename, { bookType: 'csv' });
+            } else if (format === 'tsv') {
+                XLSX.writeFile(wb, filename, { bookType: 'csv', FS: '\t' });
+            }
         }
-
-        function refreshRawView() {
-            renderRawTable(rawRendData, 'rawRendTable');
-            renderRawTable(rawIscData, 'rawIscTable');
-        }
-
-        function updateStepVisibility() {
-            const bothLoaded = mainIscData.length > 0 && mainRendData.length > 0;
-            ['stepRaw', 'stepFilter', 'stepExplore', 'stepExport'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.classList.toggle('hidden-step', !bothLoaded);
-            });
-        }
-
-        function toggleRawRendVisibility() {
-            const section = document.getElementById('rawRendSection');
-            const btn = document.getElementById('toggleRawRendButton');
-            if (!section || !btn) return;
-            const visible = section.classList.toggle('visible');
-            btn.textContent = visible ? '🙈 Nascondi rendimenti grezzi' : '👁️ Mostra rendimenti grezzi';
-        }
-
-        function toggleRawIscVisibility() {
-            const section = document.getElementById('rawIscSection');
-            const btn = document.getElementById('toggleRawIscButton');
-            if (!section || !btn) return;
-            const visible = section.classList.toggle('visible');
-            btn.textContent = visible ? '🙈 Nascondi ISC grezzi' : '👁️ Mostra ISC grezzi';
-        }
-
-        function toggleOfficialColumns() {
-            const table = document.getElementById('fundsDataTable');
-            const btn = document.getElementById('toggleOfficialColumnsBtn');
-            if (!table || !btn) return;
-            const hidden = table.classList.toggle('official-hidden');
-            btn.textContent = hidden ? '👁️ Mostra colonne ufficiali' : '🙈 Nascondi colonne ufficiali';
-        }
-
-        // ---------------- Inizializzazione ----------------
-        window.onload = function () {
-            loadPrefs();
-            const onlyMatched = document.getElementById('onlyMatched');
-            if (onlyMatched) onlyMatched.checked = true;
-            processAndRender();
-            refreshRawView();
-            setTimeout(updateScrollProgress, 100);
-        };
     </script>
-
 </body>
 
 </html>
