@@ -1,9 +1,4 @@
 
-> [!CAUTION]
-> Sviluppo e test in corso!  
-> I risultati restituiti non sono ancora 100% completi, c'è qualche problemino residuo nel parsing degli XLSX COVIP.
-
-
 <img alt="aperiCovip" src="https://github.com/user-attachments/assets/c516c78e-f1af-491e-b9a4-9f14298b77f6" />
 
 # aperiCovip
